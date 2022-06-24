@@ -1,3 +1,5 @@
+""" Main collection of functions for classifying edits """
+
 import re
 
 from Levenshtein import ratio as lev
@@ -76,6 +78,7 @@ def one_sided_aux(toks):
         return True
     return False
 
+
 def one_sided_tense(toks):
     if (    (len(toks) == 1) and
             (toks[0].lemma == 'быть') and
@@ -89,11 +92,13 @@ def one_sided_syntax(toks):
     if pos_set.issubset({'PUNCT'}):
         return True
 
+
 def one_sided_prep(toks):
     pos_set = {tok.pos for tok in toks}
     if pos_set.issubset({'ADP'}):
         return True
     return False
+
 
 def one_sided_lex(toks):
     pymorphy_parser = pymorphy2.MorphAnalyzer()
@@ -151,14 +156,14 @@ def get_two_sided_type(o_toks, c_toks):
         return "Graph"
 
     if hyphen_ins(o_toks, c_toks):
-        return "Hyphen"
+        return "Hyphen+Ins"
     if hyphen_del(o_toks, c_toks):
-        return "Hyphen"
+        return "Hyphen+Del"
 
     if space_ins(o_toks, c_toks):
-        return "Space"
+        return "Space+Ins"
     if space_del(o_toks, c_toks):
-        return "Space"
+        return "Space+Del"
 
     if word_order(o_toks, c_toks):
         return "WO"
@@ -222,8 +227,11 @@ def hyphen_del(o_toks, c_toks):
 
 def infl(o_toks, c_toks):
     stemmer = SnowballStemmer("russian")
+    print(stemmer.stem("стелет"))
+    print(stemmer.stem("стелют"))
     if ((len(o_toks) == len(c_toks) == 1) and
-            (stemmer.stem(o_toks[0].text) == stemmer.stem(c_toks[0].text))):
+            ((stemmer.stem(o_toks[0].text) == stemmer.stem(c_toks[0].text)) or
+             (o_toks[0].lemma == c_toks[0].lemma))):
         return True
     return False
 
@@ -509,6 +517,7 @@ def cs(o_toks, c_toks):
 
 
 def lex(o_toks, c_toks):
+    # lex при несовпадении лемм в других лексических ошибках
     pymorphy_parser = pymorphy2.MorphAnalyzer()
     if len(o_toks) == len(c_toks) == 1 and pymorphy_parser.word_is_known(o_toks[0].text):
         return True

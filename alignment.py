@@ -1,3 +1,5 @@
+""" Main class for aligning single tokens between original and corrected versions of the text """
+
 import Levenshtein
 from itertools import groupby
 
@@ -13,12 +15,19 @@ class Alignment:
         self.align_seq = self.get_cheapest_align_seq()
 
     def align(self):
+        """ Builds a cost and operation matrices to be used later in the alignment algorithm """
+
         o_len = len(self.orig)
         c_len = len(self.cor)
         o_low = [o.text.lower() for o in self.orig]
         c_low = [c.text.lower() for c in self.cor]
+
+        # Cost matrix contains the costs of operations between tokens in the original and corrected texts
         cost_matrix = [[0.0 for j in range(c_len + 1)] for i in range(o_len + 1)]
+        # Operation matrix contains the selected operations between pairs of token in the original and corrected texts
         op_matrix = [["O" for j in range(c_len + 1)] for i in range(o_len + 1)]
+
+        # Initialize the matrices by setting the 0th row and 0th column
         for i in range(1, o_len + 1):
             cost_matrix[i][0] = cost_matrix[i - 1][0] + 1
             op_matrix[i][0] = "D"
@@ -26,18 +35,21 @@ class Alignment:
             cost_matrix[0][j] = cost_matrix[0][j - 1] + 1
             op_matrix[0][j] = "I"
 
+        # Loop through the matrix, selecting optimal operations between every pair of tokens
         for i in range(o_len):
             for j in range(c_len):
-                # Matches
                 if self.orig[i].text == self.cor[j].text:
                     cost_matrix[i + 1][j + 1] = cost_matrix[i][j]
                     op_matrix[i + 1][j + 1] = "M"
                 else:
+                    # Calculate costs of every operation
                     del_cost = cost_matrix[i][j + 1] + 1
                     ins_cost = cost_matrix[i + 1][j] + 1
                     trans_cost = float("inf")
                     sub_cost = cost_matrix[i][j] + \
-                               self.get_sub_cost(self.orig[i], self.cor[j])
+                        self.get_sub_cost(self.orig[i], self.cor[j])
+
+                    # Transposition cost calculation
                     k = 1
                     while i - k >= 0 and j - k >= 0 and \
                             cost_matrix[i - k + 1][j - k + 1] != cost_matrix[i - k][j - k]:
@@ -45,6 +57,8 @@ class Alignment:
                             trans_cost = cost_matrix[i - k][j - k] + k
                             break
                         k += 1
+
+                    # Select the operation with the cheapest cost
                     costs = [trans_cost, sub_cost, ins_cost, del_cost]
                     l = costs.index(min(costs))
                     cost_matrix[i + 1][j + 1] = costs[l]
@@ -59,7 +73,9 @@ class Alignment:
         return cost_matrix, op_matrix
 
     def get_sub_cost(self, o, c):
-        if o.text.lower() == c.text.lower(): return 0
+        """ Calculate the cost of a substitution operation using the Levenshtein distance with additional penalties"""
+        if o.text.lower() == c.text.lower():
+            return 0
         if o.lemma == c.lemma:
             lemma_cost = 0
         else:
@@ -72,6 +88,7 @@ class Alignment:
         return lemma_cost + pos_cost + char_cost
 
     def get_cheapest_align_seq(self):
+        """ Align the tokens by selecting the optimal operation in the cost matrix """
         i = len(self.op_matrix) - 1
         j = len(self.op_matrix[0]) - 1
         align_seq = []
@@ -96,6 +113,7 @@ class Alignment:
         return align_seq
 
     def get_all_split_edits(self):
+        """ all-split merge algorithm. i.e. don't merge any edits"""
         edits = []
         for align in self.align_seq:
             if align[0] != "M":
@@ -103,6 +121,7 @@ class Alignment:
         return edits
 
     def get_all_merge_edits(self):
+        """ all-merge merge algorithm. i.e. merge all edits"""
         edits = []
         for op, group in groupby(self.align_seq,
                                  lambda x: True if x[0] == "M" else False):
@@ -112,6 +131,7 @@ class Alignment:
         return edits
 
     def get_all_equal_edits(self):
+        """ all-equal merge algorithm. i.e. merge all edits of the same POS"""
         edits = []
         for op, group in groupby(self.align_seq, lambda x: x[0]):
             if op != "M":

@@ -1,3 +1,6 @@
+""" Module implementing merging rules. """
+
+
 from annotator.edit import Edit
 from itertools import combinations, groupby
 from re import sub
@@ -8,6 +11,7 @@ open_pos = {'ADJ', 'AUX', 'ADV', 'NOUN', 'VERB'}
 
 
 def get_rule_edits(alignment):
+    """ Merges edits based on a set of rules """
     edits = []
     for op, group in groupby(alignment.align_seq,
                              lambda x: x[0][0] if x[0][0] in {"M", "T"} else False):
@@ -25,6 +29,7 @@ def get_rule_edits(alignment):
 
 
 def process_seq(seq, alignment):
+    """ Processes a given sequence for merging based on rules"""
     if len(seq) <= 1:
         return seq
     ops = [op[0] for op in seq]
@@ -32,9 +37,11 @@ def process_seq(seq, alignment):
         return merge_edits(seq)
 
     content = False
+    # We loop through all possible combinations of tokens in the sequence, starting from the largest
     combos = list(combinations(range(0, len(seq)), 2))
     combos.sort(key=lambda x: x[1] - x[0], reverse=True)
     for start, end in combos:
+        # Only consider sequences that have substitutions in them
         if "S" not in ops[start:end + 1]:
             continue
         o = alignment.orig[seq[start][1]:seq[end][2]]

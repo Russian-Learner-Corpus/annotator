@@ -1,4 +1,5 @@
 class Edit:
+    """ Main class for a single edit object """
 
     def __init__(self, orig, cor, edit, err_type="NA"):
         self.o_start = edit[0]
@@ -12,6 +13,7 @@ class Edit:
         self.type = err_type
 
     def minimise(self):
+        """ Removes matching tokens from the edit """
         while self.o_toks and self.c_toks and \
                 self.o_toks[0].text == self.c_toks[0].text:
             self.o_toks = self.o_toks[1:]
