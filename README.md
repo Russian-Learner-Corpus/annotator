@@ -1,6 +1,6 @@
 # Annotator
 
-A tool for automatic annotation of Russian texts. Uses two versions of a text: original and corrected to extract and classify edits.
+A tool for automatic annotation of Russian texts. Uses two versions of a text: original and corrected to extract and classify edits. Developed as a modification of [ERRANT](https://github.com/chrisjbryant/errant) for Russian texts.
 
 Using it can be as simple as 
 
