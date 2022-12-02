@@ -260,17 +260,21 @@ def gender(o_toks, c_toks):
 
     o_genders = [o_tok.feats.get('Gender', None) for o_tok in o_toks]
     c_genders = [c_tok.feats.get('Gender', None) for c_tok in c_toks]
-    pos_set = {tok.pos for tok in o_toks + c_toks}
-    lemmas_match_flags = [(o_toks[i].lemma == c_toks[i].lemma) for i in range(len(o_toks))]
+    if (o_genders == c_genders or
+            len(set(o_genders)) > 1 or
+            len(set(c_genders)) > 1 or
+            None in o_genders or
+            None in c_genders):
+        return False
 
-    if ((len(set(o_genders)) == len(set(c_genders)) == 1) and
-            (not (None in o_genders)) and
-            (not (None in c_genders)) and
-            (o_genders != c_genders) and
-            (sum(lemmas_match_flags) == len(lemmas_match_flags)) and
-            (len(pos_set & {'VERB', 'PROPN', 'NOUN', 'PRON'}) > 0)):
-        return True
-    return False
+    stemmer = SnowballStemmer("russian")
+    if not all([(stemmer.stem(o_toks[i].lemma) ==
+                 stemmer.stem(c_toks[i].lemma))
+                for i in range(len(o_toks))]):
+        return False
+
+    pos_set = {tok.pos for tok in o_toks + c_toks}
+    return len(pos_set & {'VERB', 'PROPN', 'NOUN', 'PRON'}) > 0
 
 
 # SYNTAX
