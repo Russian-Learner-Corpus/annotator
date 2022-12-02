@@ -72,7 +72,7 @@ def one_sided_conj(toks):
 
 
 def one_sided_aux(toks):
-    if (    (len(toks) == 1) and
+    if ((len(toks) == 1) and
             (toks[0].lemma == 'быть' or toks[0].lemma == 'стать') and
             (toks[0].feats.get('Tense') == 'Pres')):
         return True
@@ -80,7 +80,7 @@ def one_sided_aux(toks):
 
 
 def one_sided_tense(toks):
-    if (    (len(toks) == 1) and
+    if ((len(toks) == 1) and
             (toks[0].lemma == 'быть') and
             (toks[0].feats.get('Tense') != 'Pres')):
         return True
@@ -108,7 +108,6 @@ def one_sided_lex(toks):
 
 
 def get_two_sided_type(o_toks, c_toks):
-
     if brev(o_toks, c_toks):
         return "Brev"
     if num(o_toks, c_toks):
@@ -305,7 +304,7 @@ def passive(o_toks, c_toks):
 def brev(o_toks, c_toks):
     for o_tok in o_toks:
         for c_tok in c_toks:
-            if (    (o_tok.lemma == c_tok.lemma) and
+            if ((o_tok.lemma == c_tok.lemma) and
                     (o_tok.feats.get('Variant') != c_tok.feats.get('Variant'))
             ):
                 return True
@@ -336,7 +335,7 @@ def tense(o_toks, c_toks):
                 aux_in_c = True
                 break
 
-        if (    (aux_in_o and not aux_in_c) or
+        if ((aux_in_o and not aux_in_c) or
                 (aux_in_c and not aux_in_o)):
             return True
     return False
@@ -354,15 +353,22 @@ def remove_refl_postfix(text):
     return text
 
 
+def related_stems(first, second):
+    stemmer = SnowballStemmer('russian')
+    first_stem = stemmer.stem(first)
+    second_stem = stemmer.stem(second)
+    return (first_stem in second_stem) or (second_stem in first_stem)
+
+
 def refl(o_toks, c_toks):
     if ((len(o_toks) == len(c_toks) == 1) and
             (o_toks[0].pos == c_toks[0].pos == 'VERB')):
         if (
                 ((remove_refl_postfix(o_toks[0].lemma) != o_toks[0].lemma) and
-                 (remove_refl_postfix(o_toks[0].lemma) == c_toks[0].lemma))
+                 related_stems(remove_refl_postfix(o_toks[0].lemma), c_toks[0].lemma))
                 or
                 ((remove_refl_postfix(c_toks[0].lemma) != c_toks[0].lemma) and
-                 (remove_refl_postfix(c_toks[0].lemma) == o_toks[0].lemma))
+                 related_stems(remove_refl_postfix(c_toks[0].lemma), o_toks[0].lemma))
                 or
                 ((remove_refl_postfix(o_toks[0].text) != o_toks[0].text) and
                  (remove_refl_postfix(o_toks[0].text) == c_toks[0].text))
@@ -445,11 +451,10 @@ def agrpers(o_toks, c_toks):
 
 
 def mode(o_toks, c_toks):
-
     aux_in_o_toks = [(tok.pos == 'AUX' and tok.feats.get('Mood') == 'Cnd') for tok in o_toks]
     aux_in_c_toks = [(tok.pos == 'AUX' and tok.feats.get('Mood') == 'Cnd') for tok in c_toks]
 
-    if (    (any(aux_in_o_toks) and not any(aux_in_c_toks)) or
+    if ((any(aux_in_o_toks) and not any(aux_in_c_toks)) or
             (any(aux_in_c_toks) and not any(aux_in_o_toks))):
         return True
     return False
@@ -487,7 +492,7 @@ def gov(o_toks, c_toks):
     pos_set = {tok.pos for tok in o_toks + c_toks}
     lemmas_match_flags = [(o_toks[i].lemma == c_toks[i].lemma) for i in range(len(o_toks))]
 
-    if (    (len(set(o_cases)) == len(set(c_cases)) == 1) and
+    if ((len(set(o_cases)) == len(set(c_cases)) == 1) and
             (not (None in o_cases)) and
             (not (None in c_cases)) and
             (o_cases != c_cases) and
@@ -500,11 +505,11 @@ def gov(o_toks, c_toks):
 def impers(o_toks, c_toks):
     o_rel = {tok.rel for tok in o_toks}
     c_rel = {tok.rel for tok in c_toks}
-    if (    (   ('nsubj' in o_rel and 'nsubj' not in c_rel) or
-                ('nsubj' in c_rel and 'nsubj' not in o_rel)
-            ) and
-            (   (len(o_toks) > 1) and
-                (len(c_toks) > 1)
+    if ((('nsubj' in o_rel and 'nsubj' not in c_rel) or
+         ('nsubj' in c_rel and 'nsubj' not in o_rel)
+    ) and
+            ((len(o_toks) > 1) and
+             (len(c_toks) > 1)
             )
     ):
         return True
@@ -543,7 +548,7 @@ def ortho(o_toks, c_toks):
 def aux(o_toks, c_toks):
     o_aux_flags = [(tok.lemma == 'быть' or tok.lemma == 'стать') for tok in o_toks]
     c_aux_flags = [(tok.lemma == 'быть' or tok.lemma == 'стать') for tok in c_toks]
-    if (    (len(o_toks) > 1) and
+    if ((len(o_toks) > 1) and
             (len(c_toks) > 1) and
             ((sum(o_aux_flags)) != (sum(c_aux_flags)))):
         return True
@@ -562,4 +567,3 @@ def word_order(o_toks, c_toks):
     if o_set == c_set and len(o_set) > 1:
         return True
     return False
-
