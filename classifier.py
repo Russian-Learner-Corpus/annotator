@@ -227,8 +227,6 @@ def hyphen_del(o_toks, c_toks):
 
 def infl(o_toks, c_toks):
     stemmer = SnowballStemmer("russian")
-    print(stemmer.stem("стелет"))
-    print(stemmer.stem("стелют"))
     if ((len(o_toks) == len(c_toks) == 1) and
             ((stemmer.stem(o_toks[0].text) == stemmer.stem(c_toks[0].text)) or
              (o_toks[0].lemma == c_toks[0].lemma))):

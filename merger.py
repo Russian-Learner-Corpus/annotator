@@ -1,7 +1,7 @@
 """ Module implementing merging rules. """
 
 
-from annotator.edit import Edit
+from edit import Edit
 from itertools import combinations, groupby
 from re import sub
 import Levenshtein

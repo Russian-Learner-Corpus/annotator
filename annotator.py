@@ -1,7 +1,7 @@
-from annotator.alignment import Alignment
-from annotator.text_processor import TextProcessor
-from annotator.merger import get_rule_edits
-from annotator.classifier import classify
+from alignment import Alignment
+from text_processor import TextProcessor
+from merger import get_rule_edits
+from classifier import classify
 
 
 class Annotator:

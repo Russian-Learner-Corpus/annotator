@@ -3,7 +3,7 @@
 import Levenshtein
 from itertools import groupby
 
-from annotator.edit import Edit
+from edit import Edit
 
 
 class Alignment:
