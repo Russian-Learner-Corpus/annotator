@@ -114,13 +114,15 @@ def get_two_sided_type(o_toks, c_toks):
         return "Num"
     if gender(o_toks, c_toks):
         return "Gender"
-    if gov(o_toks, c_toks):
-        return "Gov"
-
+    if wrong_case(o_toks, c_toks):
+        if noun_case(o_toks, c_toks):
+            return "Nominative" if nominative(c_toks) else "Gov"
+        else:
+            return "Agrcase"
     if agrnum(o_toks, c_toks):
         return "Agrnum"
-    if agrcase(o_toks, c_toks):
-        return "Agrcase"
+    # if agrcase(o_toks, c_toks):
+    #    return "Agrcase"
     if agrpers(o_toks, c_toks):
         return "Agrpers"
     if agrgender(o_toks, c_toks):
@@ -398,7 +400,7 @@ def agrnum(o_toks, c_toks):
     return False
 
 
-def agrcase(o_toks, c_toks):
+def wrong_case(o_toks, c_toks):
     if len(o_toks) != len(c_toks):
         return False
 
@@ -413,6 +415,16 @@ def agrcase(o_toks, c_toks):
             (sum(lemmas_match_flags) == len(lemmas_match_flags))):
         return True
     return False
+
+
+def noun_case(o_toks, c_toks):
+    pos_set = {tok.pos for tok in o_toks + c_toks}
+    return len(pos_set & {'PROPN', 'NOUN', 'PRON'}) > 0
+
+
+def nominative(c_toks):
+    c_cases = [c_tok.feats.get('Case', None) for c_tok in c_toks]
+    return 'Nom' in c_cases
 
 
 def agrgender(o_toks, c_toks):
@@ -481,26 +493,6 @@ def com(o_toks, c_toks):
         return True
     else:
         return False
-
-
-def gov(o_toks, c_toks):
-    if len(o_toks) != len(c_toks):
-        return False
-
-    o_cases = [o_tok.feats.get('Case', None) for o_tok in o_toks]
-    c_cases = [c_tok.feats.get('Case', None) for c_tok in c_toks]
-    pos_set = {tok.pos for tok in o_toks + c_toks}
-    lemmas_match_flags = [(o_toks[i].lemma == c_toks[i].lemma) for i in range(len(o_toks))]
-
-    if ((len(set(o_cases)) == len(set(c_cases)) == 1) and
-            (not (None in o_cases)) and
-            (not (None in c_cases)) and
-            (o_cases != c_cases) and
-            (sum(lemmas_match_flags) == len(lemmas_match_flags)) and
-            (len(pos_set & {'PROPN', 'NOUN', 'PRON'}) > 0)):
-        return True
-    return False
-
 
 def impers(o_toks, c_toks):
     o_rel = {tok.rel for tok in o_toks}
