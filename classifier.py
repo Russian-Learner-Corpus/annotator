@@ -212,7 +212,7 @@ def space_del(o_toks, c_toks):
 def hyphen_ins(o_toks, c_toks):
     o_join = "".join([o.text.lower() for o in o_toks])
     c_join = "".join([c.text.lower() for c in c_toks])
-    if '-' in c_join and o_join == re.sub('-', '', c_join):
+    if '-' in c_join and lev(o_join, re.sub('-', '', c_join)) >= .75:
         return True
     return False
 
@@ -220,7 +220,7 @@ def hyphen_ins(o_toks, c_toks):
 def hyphen_del(o_toks, c_toks):
     o_join = "".join([o.text.lower() for o in o_toks])
     c_join = "".join([c.text.lower() for c in c_toks])
-    if '-' in o_join and re.sub('-', '', o_join) == c_join:
+    if '-' in o_join and lev(re.sub('-', '', o_join), c_join) >= .75:
         return True
     return False
 
