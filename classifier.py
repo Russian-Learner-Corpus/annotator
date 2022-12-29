@@ -132,10 +132,10 @@ def get_two_sided_type(o_toks, c_toks):
         return "Tense"
     if passive(o_toks, c_toks):
         return "Passive"
-    if asp(o_toks, c_toks):
-        return "Asp"
     if refl(o_toks, c_toks):
         return "Refl"
+    if asp(o_toks, c_toks):
+        return "Asp"
 
     if impers(o_toks, c_toks):
         return "Impers"
@@ -284,7 +284,8 @@ def gender(o_toks, c_toks):
 def asp(o_toks, c_toks):
     if ((len(o_toks) == len(c_toks) == 1) and
             (o_toks[0].pos == c_toks[0].pos == 'VERB') and
-            (o_toks[0].lemma == c_toks[0].lemma) and
+            # (o_toks[0].lemma == c_toks[0].lemma) and
+            related_stems(o_toks[0].lemma, c_toks[0].lemma) and
             (o_toks[0].feats['Aspect'] != c_toks[0].feats['Aspect'])):
         return True
     return False
