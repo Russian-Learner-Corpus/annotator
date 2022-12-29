@@ -533,7 +533,7 @@ def prep(o_toks, c_toks):
 
 def ortho(o_toks, c_toks):
     if ((len(o_toks) == len(c_toks) == 1) and
-            (lev(o_toks[0].text, c_toks[0].text) > 0.8)):
+            (lev(o_toks[0].text, c_toks[0].text) >= 0.8)):
         return True
     return False
 
