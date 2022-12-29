@@ -175,6 +175,8 @@ def get_two_sided_type(o_toks, c_toks):
         return "Lex"
     if syntax(o_toks, c_toks):
         return "Syntax"
+    if morph(o_toks, c_toks):
+        return "Morph"
     if ortho(o_toks, c_toks):
         return "Ortho"
 
@@ -361,6 +363,11 @@ def related_stems(first, second):
     first_stem = stemmer.stem(first)
     second_stem = stemmer.stem(second)
     return (first_stem in second_stem) or (second_stem in first_stem)
+
+
+def morph(o_toks, c_toks):
+    return len(o_toks) == len(c_toks) == 1 and \
+           related_stems(o_toks[0].lemma, c_toks[0].lemma)
 
 
 def refl(o_toks, c_toks):
