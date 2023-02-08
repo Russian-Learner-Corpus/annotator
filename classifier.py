@@ -6,6 +6,8 @@ from Levenshtein import ratio as lev
 from nltk.stem.snowball import SnowballStemmer
 import pymorphy2
 
+pymorphy_parser = pymorphy2.MorphAnalyzer()
+
 
 def classify(edit):
     if not edit.o_toks and not edit.c_toks:
@@ -101,7 +103,7 @@ def one_sided_prep(toks):
 
 
 def one_sided_lex(toks):
-    pymorphy_parser = pymorphy2.MorphAnalyzer()
+    #pymorphy_parser = pymorphy2.MorphAnalyzer()
     if len(toks) == 1 and pymorphy_parser.word_is_known(toks[0].text):
         return True
     return False
@@ -233,7 +235,9 @@ def infl(o_toks, c_toks):
     if ((len(o_toks) == len(c_toks) == 1) and
             ((stemmer.stem(o_toks[0].text) == stemmer.stem(c_toks[0].text)) or
              (o_toks[0].lemma == c_toks[0].lemma))):
-        return True
+        parses = pymorphy_parser.parse(c_toks[0].lemma)
+        if o_toks[0].text not in [form.word for p in parses for form in p.lexeme]:
+            return True
     return False
 
 
@@ -366,8 +370,9 @@ def related_stems(first, second):
 
 
 def morph(o_toks, c_toks):
-    return len(o_toks) == len(c_toks) == 1 and \
-           related_stems(o_toks[0].lemma, c_toks[0].lemma)
+    return (len(o_toks) == len(c_toks) == 1
+            and o_toks[0].lemma != c_toks[0].lemma
+            and related_stems(o_toks[0].lemma, c_toks[0].lemma))
 
 
 def refl(o_toks, c_toks):
@@ -524,9 +529,9 @@ def cs(o_toks, c_toks):
 
 
 def lex(o_toks, c_toks):
-    # lex при несовпадении лемм в других лексических ошибках
-    pymorphy_parser = pymorphy2.MorphAnalyzer()
-    if len(o_toks) == len(c_toks) == 1 and pymorphy_parser.word_is_known(o_toks[0].text):
+    if (len(o_toks) == len(c_toks) == 1 and
+            pymorphy_parser.word_is_known(o_toks[0].text) and
+            o_toks[0].lemma != c_toks[0].lemma):
         return True
     return False
 
