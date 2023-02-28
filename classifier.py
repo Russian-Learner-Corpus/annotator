@@ -378,19 +378,13 @@ def morph(o_toks, c_toks):
 def refl(o_toks, c_toks):
     if ((len(o_toks) == len(c_toks) == 1) and
             (o_toks[0].pos == c_toks[0].pos == 'VERB')):
-        if (
-                ((remove_refl_postfix(o_toks[0].lemma) != o_toks[0].lemma) and
-                 related_stems(remove_refl_postfix(o_toks[0].lemma), c_toks[0].lemma))
-                or
-                ((remove_refl_postfix(c_toks[0].lemma) != c_toks[0].lemma) and
-                 related_stems(remove_refl_postfix(c_toks[0].lemma), o_toks[0].lemma))
-                or
-                ((remove_refl_postfix(o_toks[0].text) != o_toks[0].text) and
-                 (remove_refl_postfix(o_toks[0].text) == c_toks[0].text))
-                or
-                ((remove_refl_postfix(c_toks[0].text) != c_toks[0].text) and
-                 (remove_refl_postfix(c_toks[0].text) == o_toks[0].text))
-        ):
+        o_basic = remove_refl_postfix(o_toks[0].lemma)
+        c_basic = remove_refl_postfix(c_toks[0].lemma)
+        if (((o_basic != o_toks[0].lemma and c_basic == c_toks[0].lemma) or
+             (o_basic == o_toks[0].lemma and c_basic != c_toks[0].lemma)) and
+            (related_stems(o_basic, c_basic) or
+             o_basic == c_toks[0].text or
+             c_basic == o_toks[0].text)):
             return True
     return False
 
