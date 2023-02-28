@@ -58,7 +58,7 @@ def process_seq(seq, alignment):
                        process_seq(seq[end + 1:], alignment)
         s_str = "".join([tok.text.lower() for tok in o])
         t_str = "".join([tok.text.lower() for tok in c])
-        if '-' in s_str or '-' in t_str:
+        if '-' in s_str or '-' in t_str or s_str == t_str:
             s_str = sub("['-]", "", "".join([tok.text.lower() for tok in o]))
             t_str = sub("['-]", "", "".join([tok.text.lower() for tok in c]))
             if Levenshtein.ratio(s_str, t_str) >= .75:
