@@ -1,12 +1,17 @@
 """ Main collection of functions for classifying edits """
-
+import pymorphy2
 import re
 
 from Levenshtein import ratio as lev
 from nltk.stem.snowball import SnowballStemmer
-import pymorphy2
+
+ML = False
+
+if ML:
+    from morph_ortho import is_morph
 
 pymorphy_parser = pymorphy2.MorphAnalyzer()
+stemmer = SnowballStemmer('russian')
 
 
 def classify(edit):
@@ -103,7 +108,7 @@ def one_sided_prep(toks):
 
 
 def one_sided_lex(toks):
-    #pymorphy_parser = pymorphy2.MorphAnalyzer()
+    # pymorphy_parser = pymorphy2.MorphAnalyzer()
     if len(toks) == 1 and pymorphy_parser.word_is_known(toks[0].text):
         return True
     return False
@@ -177,12 +182,14 @@ def get_two_sided_type(o_toks, c_toks):
         return "Lex"
     if syntax(o_toks, c_toks):
         return "Syntax"
-    if morph(o_toks, c_toks):
-        return "Morph"
-    if ortho(o_toks, c_toks):
-        return "Ortho"
 
-    return "Misspell"
+    tag = '(Morph)' if morph(o_toks, c_toks) else ''
+    if morph_ml(o_toks, c_toks):
+        return tag + "Morph"
+    if ortho(o_toks, c_toks):
+        return tag + "Ortho"
+
+    return tag + "Misspell"
 
 
 # ORTHOGRAPHY
@@ -231,7 +238,6 @@ def hyphen_del(o_toks, c_toks):
 
 
 def infl(o_toks, c_toks):
-    stemmer = SnowballStemmer("russian")
     if ((len(o_toks) == len(c_toks) == 1) and
             ((stemmer.stem(o_toks[0].text) == stemmer.stem(c_toks[0].text)) or
              (o_toks[0].lemma == c_toks[0].lemma))):
@@ -265,8 +271,10 @@ def gender(o_toks, c_toks):
     if len(o_toks) != len(c_toks):
         return False
 
-    o_genders = [o_tok.feats.get('Gender', None) for o_tok in o_toks]
-    c_genders = [c_tok.feats.get('Gender', None) for c_tok in c_toks]
+    # o_genders = [o_tok.feats.get('Gender', None) for o_tok in o_toks]
+    o_genders = [pymorphy_parser.parse(o_tok.text)[0].tag.gender for o_tok in o_toks]
+    # c_genders = [c_tok.feats.get('Gender', None) for c_tok in c_toks]
+    c_genders = [pymorphy_parser.parse(c_tok.text)[0].tag.gender for c_tok in c_toks]
     if (o_genders == c_genders or
             len(set(o_genders)) > 1 or
             len(set(c_genders)) > 1 or
@@ -313,9 +321,9 @@ def passive(o_toks, c_toks):
 def brev(o_toks, c_toks):
     for o_tok in o_toks:
         for c_tok in c_toks:
-            if ((o_tok.lemma == c_tok.lemma) and
-                    (o_tok.feats.get('Variant') != c_tok.feats.get('Variant'))
-            ):
+            if ((o_tok.lemma == c_tok.lemma
+                 or stemmer.stem(o_tok.text) == stemmer.stem(c_tok.text))
+                    and o_tok.feats.get('Variant') != c_tok.feats.get('Variant')):
                 return True
     return False
 
@@ -363,7 +371,6 @@ def remove_refl_postfix(text):
 
 
 def related_stems(first, second):
-    stemmer = SnowballStemmer('russian')
     first_stem = stemmer.stem(first)
     second_stem = stemmer.stem(second)
     return (first_stem in second_stem) or (second_stem in first_stem)
@@ -375,6 +382,12 @@ def morph(o_toks, c_toks):
             and related_stems(o_toks[0].lemma, c_toks[0].lemma))
 
 
+def morph_ml(o_toks, c_toks):
+    return (ML and
+            len(o_toks) == len(c_toks) == 1
+            and is_morph(o_toks[0].text, c_toks[0].text))
+
+
 def refl(o_toks, c_toks):
     if ((len(o_toks) == len(c_toks) == 1) and
             (o_toks[0].pos == c_toks[0].pos == 'VERB')):
@@ -382,9 +395,9 @@ def refl(o_toks, c_toks):
         c_basic = remove_refl_postfix(c_toks[0].lemma)
         if (((o_basic != o_toks[0].lemma and c_basic == c_toks[0].lemma) or
              (o_basic == o_toks[0].lemma and c_basic != c_toks[0].lemma)) and
-            (related_stems(o_basic, c_basic) or
-             o_basic == c_toks[0].text or
-             c_basic == o_toks[0].text)):
+                (related_stems(o_basic, c_basic) or
+                 o_basic == c_toks[0].text or
+                 c_basic == o_toks[0].text)):
             return True
     return False
 
@@ -500,6 +513,7 @@ def com(o_toks, c_toks):
         return True
     else:
         return False
+
 
 def impers(o_toks, c_toks):
     o_rel = {tok.rel for tok in o_toks}
