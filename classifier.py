@@ -242,7 +242,7 @@ def infl(o_toks, c_toks):
             ((stemmer.stem(o_toks[0].text) == stemmer.stem(c_toks[0].text)) or
              (o_toks[0].lemma == c_toks[0].lemma))):
         parses = pymorphy_parser.parse(c_toks[0].lemma)
-        if o_toks[0].text not in [form.word for p in parses for form in p.lexeme]:
+        if o_toks[0].text.lower() not in [form.word for p in parses for form in p.lexeme]:
             return True
     return False
 
@@ -329,7 +329,7 @@ def brev_natasha(o_toks, c_toks):
 
 
 def get_adjectives(toks):
-    return [p for t in toks for p in pymorphy_parser.parse(t.text) if p.tag.POS in ['ADJF', 'ADJS']]
+    return [p for t in toks for p in pymorphy_parser.parse(t.text) if p.tag.POS in ['ADJF', 'ADJS', 'PRTS', 'PRTF']]
 
 
 def brev(o_toks, c_toks):
