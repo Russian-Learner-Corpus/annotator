@@ -5,7 +5,7 @@ import re
 from Levenshtein import ratio as lev
 from nltk.stem.snowball import SnowballStemmer
 
-ML = False
+ML = False #True
 
 if ML:
     from morph_ortho import is_morph
@@ -318,12 +318,28 @@ def passive(o_toks, c_toks):
     return False
 
 
-def brev(o_toks, c_toks):
+def brev_natasha(o_toks, c_toks):
     for o_tok in o_toks:
         for c_tok in c_toks:
             if ((o_tok.lemma == c_tok.lemma
                  or stemmer.stem(o_tok.text) == stemmer.stem(c_tok.text))
                     and o_tok.feats.get('Variant') != c_tok.feats.get('Variant')):
+                return True
+    return False
+
+
+def get_adjectives(toks):
+    return [p for t in toks for p in pymorphy_parser.parse(t.text) if p.tag.POS in ['ADJF', 'ADJS']]
+
+
+def brev(o_toks, c_toks):
+    o_adjs = get_adjectives(o_toks)
+    c_adjs = get_adjectives(c_toks)
+    for o in o_adjs:
+        for c in c_adjs:
+            if (o.tag.POS != c.tag.POS and
+                    (o.normal_form == c.normal_form or
+                     stemmer.stem(o.word) == stemmer.stem(c.word))):
                 return True
     return False
 
