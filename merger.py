@@ -56,15 +56,18 @@ def process_seq(seq, alignment):
                 return process_seq(seq[:end - 1], alignment) + \
                        merge_edits(seq[end - 1:end + 1]) + \
                        process_seq(seq[end + 1:], alignment)
-        s_str = "".join([tok.text.lower() for tok in o])
-        t_str = "".join([tok.text.lower() for tok in c])
-        if '-' in s_str or '-' in t_str or s_str == t_str:
-            s_str = sub("['-]", "", "".join([tok.text.lower() for tok in o]))
-            t_str = sub("['-]", "", "".join([tok.text.lower() for tok in c]))
-            if Levenshtein.ratio(s_str, t_str) >= .75:
-                return process_seq(seq[:start], alignment) + \
-                       merge_edits(seq[start:end + 1]) + \
-                       process_seq(seq[end + 1:], alignment)
+
+        o_str = "".join([tok.text.lower() for tok in o])
+        s = sub("['-]", "", o_str)
+        c_str = "".join([tok.text.lower() for tok in c])
+        t = sub("['-]", "", c_str)
+        if s == t or (len(o) + len(c) <= 4 and
+                      '-' in o_str + c_str and
+                      Levenshtein.ratio(s, t) >= .75):
+            return process_seq(seq[:start], alignment) + \
+                   merge_edits(seq[start:end + 1]) + \
+                   process_seq(seq[end + 1:], alignment)
+
         pos_set = set([tok.pos for tok in o] + [tok.pos for tok in c])
         if len(o) != len(c) and (len(pos_set) == 1 or
                                  pos_set.issubset({'AUX', 'PART', 'VERB'})):
