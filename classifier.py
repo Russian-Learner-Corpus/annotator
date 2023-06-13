@@ -14,6 +14,10 @@ pymorphy_parser = pymorphy2.MorphAnalyzer()
 stemmer = SnowballStemmer('russian')
 
 
+def get_pos(word):
+    return pymorphy_parser.parse(word)[0].tag.POS
+
+
 def classify(edit):
     if not edit.o_toks and not edit.c_toks:
         edit.type = "UNK"
@@ -405,15 +409,16 @@ def morph_ml(o_toks, c_toks):
 
 
 def refl(o_toks, c_toks):
-    if ((len(o_toks) == len(c_toks) == 1) and
-            (o_toks[0].pos == c_toks[0].pos == 'VERB')):
-        o_basic = remove_refl_postfix(o_toks[0].lemma)
-        c_basic = remove_refl_postfix(c_toks[0].lemma)
-        if (((o_basic != o_toks[0].lemma and c_basic == c_toks[0].lemma) or
-             (o_basic == o_toks[0].lemma and c_basic != c_toks[0].lemma)) and
+    o_verbs = [t for t in o_toks if get_pos(t.text) == 'VERB']
+    c_verbs = [t for t in c_toks if get_pos(t.text) == 'VERB']
+    if len(o_verbs) == len(c_verbs) == 1:
+        o_basic = remove_refl_postfix(o_verbs[0].lemma)
+        c_basic = remove_refl_postfix(c_verbs[0].lemma)
+        if (((o_basic != o_verbs[0].lemma and c_basic == c_verbs[0].lemma) or
+             (o_basic == o_verbs[0].lemma and c_basic != c_verbs[0].lemma)) and
                 (related_stems(o_basic, c_basic) or
-                 o_basic == c_toks[0].text or
-                 c_basic == o_toks[0].text)):
+                 o_basic == c_verbs[0].text or
+                 c_basic == o_verbs[0].text)):
             return True
     return False
 

@@ -68,9 +68,13 @@ def process_seq(seq, alignment):
                    merge_edits(seq[start:end + 1]) + \
                    process_seq(seq[end + 1:], alignment)
 
+        o_pos_set = set([tok.pos for tok in o])
+        c_pos_set = set([tok.pos for tok in c])
         pos_set = set([tok.pos for tok in o] + [tok.pos for tok in c])
         if len(o) != len(c) and (len(pos_set) == 1 or
-                                 pos_set.issubset({'AUX', 'PART', 'VERB'})):
+                                 (o_pos_set | c_pos_set).issubset({'AUX', 'PART', 'VERB'}) or
+                                 {'VERB', 'PRON'} == o_pos_set or
+                                 {'VERB', 'PRON'} == c_pos_set):
             return process_seq(seq[:start], alignment) + \
                    merge_edits(seq[start:end + 1]) + \
                    process_seq(seq[end + 1:], alignment)
