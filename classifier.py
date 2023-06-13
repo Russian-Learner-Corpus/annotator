@@ -2,7 +2,7 @@
 import pymorphy2
 import re
 
-from Levenshtein import ratio as lev
+from Levenshtein import distance, ratio as lev
 from nltk.stem.snowball import SnowballStemmer
 
 ML = False #True
@@ -394,8 +394,8 @@ def related_stems(first, second):
     first_stem = stemmer.stem(first)
     second_stem = stemmer.stem(second)
     min_length = min(len(first_stem), len(second_stem))
-    return (lev(first_stem[:min_length], second_stem[:min_length]) > 0.85 or
-            lev(first_stem[-min_length:], second_stem[-min_length:]) > 0.85)
+    return (distance(first_stem[:min_length], second_stem[:min_length]) < 2 or
+            distance(first_stem[-min_length:], second_stem[-min_length:]) < 2)
 
 
 def morph(o_toks, c_toks):
