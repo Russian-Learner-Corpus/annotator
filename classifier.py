@@ -22,6 +22,14 @@ def get_tense(verb):
     return pymorphy_parser.parse(verb)[0].tag.tense
 
 
+def get_aspect(verb):
+    return pymorphy_parser.parse(verb)[0].tag.aspect
+
+
+def get_possible_cases(word):
+    return set(p.tag.case for p in pymorphy_parser.parse(word))
+
+
 def classify(edit):
     if not edit.o_toks and not edit.c_toks:
         edit.type = "UNK"
@@ -362,10 +370,10 @@ def extract_aux_tense_asp(toks):
     extracted_asp = None
     for t in toks:
         if t.lemma == 'быть' and t.pos == 'AUX' and t.feats.get('Tense') == 'Pres':
-            return True, get_tense(t.text), t.feats['Aspect']
+            return True, get_tense(t.text), get_aspect(t.text)
         if t.pos == 'VERB':
             extracted_tense = get_tense(t.text)
-            extracted_asp = t.feats['Aspect']
+            extracted_asp = get_aspect(t.text)
     return False, extracted_tense, extracted_asp
 
 
@@ -457,17 +465,22 @@ def wrong_case(o_toks, c_toks):
     if len(o_toks) != len(c_toks):
         return False
 
-    o_cases = [o_tok.feats.get('Case', None) for o_tok in o_toks]
-    c_cases = [c_tok.feats.get('Case', None) for c_tok in c_toks]
-    lemmas_match_flags = [(o_toks[i].lemma == c_toks[i].lemma) for i in range(len(o_toks))]
+    o_cases = set.intersection(*[get_possible_cases(t.text) for t in o_toks])
+    if not o_cases:
+        return False
 
-    if ((len(set(o_cases)) == len(set(c_cases)) == 1) and
-            (not (None in o_cases)) and
-            (not (None in c_cases)) and
-            (o_cases != c_cases) and
-            (sum(lemmas_match_flags) == len(lemmas_match_flags))):
-        return True
-    return False
+    c_cases = set.intersection(*[get_possible_cases(t.text) for t in c_toks])
+    if not c_cases:
+        return False
+
+    if o_cases & c_cases:   # can be the same case
+        return False
+
+    for o, c in zip(o_toks, c_toks):
+        if o.lemma != c.lemma:
+            return False
+
+    return True
 
 
 def noun_case(o_toks, c_toks):
