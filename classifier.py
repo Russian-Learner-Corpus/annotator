@@ -393,7 +393,9 @@ def remove_refl_postfix(text):
 def related_stems(first, second):
     first_stem = stemmer.stem(first)
     second_stem = stemmer.stem(second)
-    return (first_stem in second_stem) or (second_stem in first_stem)
+    min_length = min(len(first_stem), len(second_stem))
+    return (lev(first_stem[:min_length], second_stem[:min_length]) > 0.85 or
+            lev(first_stem[-min_length:], second_stem[-min_length:]) > 0.85)
 
 
 def morph(o_toks, c_toks):
