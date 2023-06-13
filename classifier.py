@@ -310,13 +310,13 @@ def asp(o_toks, c_toks):
 
 
 def passive(o_toks, c_toks):
-    o_pos = [o_tok.pos for o_tok in o_toks]
-    c_pos = [c_tok.pos for c_tok in c_toks]
+    o_pos = [get_pos(o_tok.text) for o_tok in o_toks]
+    c_pos = [get_pos(c_tok.text) for c_tok in c_toks]
     o_voices = [o_tok.feats.get('Voice', None) for o_tok in o_toks]
     c_voices = [c_tok.feats.get('Voice', None) for c_tok in c_toks]
     if (('VERB' in o_pos and 'VERB' in c_pos) and
-            (('Act' in o_voices and 'Pass' in c_voices) or
-             ('Pass' in o_voices and 'Act' in c_voices))):
+            (('Pass' not in o_voices and 'Pass' in c_voices) or
+             ('Pass' in o_voices and 'Pass' not in c_voices))):
         return True
 
     return False
