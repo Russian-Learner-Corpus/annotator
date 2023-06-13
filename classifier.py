@@ -5,7 +5,7 @@ import re
 from Levenshtein import distance, ratio as lev
 from nltk.stem.snowball import SnowballStemmer
 
-ML = False #True
+ML = False  # True
 
 if ML:
     from morph_ortho import is_morph
@@ -16,6 +16,10 @@ stemmer = SnowballStemmer('russian')
 
 def get_pos(word):
     return pymorphy_parser.parse(word)[0].tag.POS
+
+
+def get_tense(verb):
+    return pymorphy_parser.parse(verb)[0].tag.tense
 
 
 def classify(edit):
@@ -199,7 +203,7 @@ def get_two_sided_type(o_toks, c_toks):
 # ORTHOGRAPHY
 
 
-def graph(o_toks, c_toks):
+def graph(o_toks, _):
     for tok in o_toks:
         if re.search('[а-яА-Я]', tok.text) and tok.feats.get('Foreign') == 'Yes':
             return True
@@ -286,7 +290,6 @@ def gender(o_toks, c_toks):
             None in c_genders):
         return False
 
-    stemmer = SnowballStemmer("russian")
     if not all([(stemmer.stem(o_toks[i].lemma) ==
                  stemmer.stem(c_toks[i].lemma))
                 for i in range(len(o_toks))]):
@@ -300,13 +303,19 @@ def gender(o_toks, c_toks):
 
 
 def asp(o_toks, c_toks):
-    if ((len(o_toks) == len(c_toks) == 1) and
-            (o_toks[0].pos == c_toks[0].pos == 'VERB') and
-            # (o_toks[0].lemma == c_toks[0].lemma) and
-            related_stems(o_toks[0].lemma, c_toks[0].lemma) and
-            (o_toks[0].feats['Aspect'] != c_toks[0].feats['Aspect'])):
-        return True
-    return False
+    _, _, o_asp = extract_aux_tense_asp(o_toks)
+    _, _, c_asp = extract_aux_tense_asp(c_toks)
+    if o_asp == c_asp:
+        return False
+
+    o_verbs = [t for t in o_toks if t.pos == 'VERB']
+    c_verbs = [t for t in o_toks if t.pos == 'VERB']
+    if len(o_verbs) == len(c_verbs) > 0:
+        for ov, cv in zip(o_verbs, c_verbs):
+            if not related_stems(ov.lemma, cv.lemma):
+                return False
+
+    return True
 
 
 def passive(o_toks, c_toks):
@@ -348,6 +357,18 @@ def brev(o_toks, c_toks):
     return False
 
 
+def extract_aux_tense_asp(toks):
+    extracted_tense = None
+    extracted_asp = None
+    for t in toks:
+        if t.lemma == 'быть' and t.pos == 'AUX' and t.feats.get('Tense') == 'Pres':
+            return True, get_tense(t.text), t.feats['Aspect']
+        if t.pos == 'VERB':
+            extracted_tense = get_tense(t.text)
+            extracted_asp = t.feats['Aspect']
+    return False, extracted_tense, extracted_asp
+
+
 def tense(o_toks, c_toks):
     # Past <-> Present switch
     if len(o_toks) == len(c_toks) == 1:
@@ -361,20 +382,9 @@ def tense(o_toks, c_toks):
             return True
     # Past/Present <-> Future switch
     else:
-        aux_in_o = False
-        aux_in_c = False
-        for tok in o_toks:
-            if tok.lemma == 'быть' and tok.pos == 'AUX' and tok.feats.get('Tense') == 'Pres':
-                aux_in_o = True
-                break
-        for tok in c_toks:
-            if tok.lemma == 'быть' and tok.pos == 'AUX' and tok.feats.get('Tense') == 'Pres':
-                aux_in_c = True
-                break
-
-        if ((aux_in_o and not aux_in_c) or
-                (aux_in_c and not aux_in_o)):
-            return True
+        aux_in_o, o_tense, _ = extract_aux_tense_asp(o_toks)
+        aux_in_c, c_tense, _ = extract_aux_tense_asp(c_toks)
+        return aux_in_o != aux_in_c and o_tense != c_tense
     return False
 
 
