@@ -455,8 +455,6 @@ def agrnum(o_toks, c_toks):
     if len(o_toks) != len(c_toks):
         return False
 
-    # o_nums = [o_tok.feats.get('Number', None) for o_tok in o_toks]
-    # c_nums = [c_tok.feats.get('Number', None) for c_tok in c_toks]
     o_nums = [get_number(o_tok.text) for o_tok in o_toks]
     c_nums = [get_number(c_tok.text) for c_tok in c_toks]
     lemmas_match_flags = [(o_toks[i].lemma == c_toks[i].lemma) for i in range(len(o_toks))]
