@@ -18,6 +18,10 @@ def get_pos(word):
     return pymorphy_parser.parse(word)[0].tag.POS
 
 
+def get_number(word):
+    return pymorphy_parser.parse(word)[0].tag.number
+
+
 def get_tense(verb):
     return pymorphy_parser.parse(verb)[0].tag.tense
 
@@ -133,6 +137,10 @@ def one_sided_lex(toks):
 def get_two_sided_type(o_toks, c_toks):
     if brev(o_toks, c_toks):
         return "Brev"
+    if tense(o_toks, c_toks):
+        return "Tense"
+    if passive(o_toks, c_toks):
+        return "Passive"
     if num(o_toks, c_toks):
         return "Num"
     if gender(o_toks, c_toks):
@@ -151,10 +159,10 @@ def get_two_sided_type(o_toks, c_toks):
     if agrgender(o_toks, c_toks):
         return "Agrgender"
 
-    if tense(o_toks, c_toks):
-        return "Tense"
-    if passive(o_toks, c_toks):
-        return "Passive"
+#    if tense(o_toks, c_toks):
+#        return "Tense"
+#    if passive(o_toks, c_toks):
+#        return "Passive"
     if refl(o_toks, c_toks):
         return "Refl"
     if asp(o_toks, c_toks):
@@ -331,7 +339,7 @@ def passive(o_toks, c_toks):
     c_pos = [get_pos(c_tok.text) for c_tok in c_toks]
     o_voices = [o_tok.feats.get('Voice', None) for o_tok in o_toks]
     c_voices = [c_tok.feats.get('Voice', None) for c_tok in c_toks]
-    if (('VERB' in o_pos and 'VERB' in c_pos) and
+    if (({'VERB', 'PRTS'} & set(o_pos)) and ({'VERB', 'PRTS'} & set(c_pos)) and
             (('Pass' not in o_voices and 'Pass' in c_voices) or
              ('Pass' in o_voices and 'Pass' not in c_voices))):
         return True
@@ -447,8 +455,10 @@ def agrnum(o_toks, c_toks):
     if len(o_toks) != len(c_toks):
         return False
 
-    o_nums = [o_tok.feats.get('Number', None) for o_tok in o_toks]
-    c_nums = [c_tok.feats.get('Number', None) for c_tok in c_toks]
+    # o_nums = [o_tok.feats.get('Number', None) for o_tok in o_toks]
+    # c_nums = [c_tok.feats.get('Number', None) for c_tok in c_toks]
+    o_nums = [get_number(o_tok.text) for o_tok in o_toks]
+    c_nums = [get_number(c_tok.text) for c_tok in c_toks]
     lemmas_match_flags = [(o_toks[i].lemma == c_toks[i].lemma) for i in range(len(o_toks))]
 
     if ((len(set(o_nums)) == len(set(c_nums)) == 1) and
