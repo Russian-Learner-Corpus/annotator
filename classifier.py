@@ -320,11 +320,11 @@ def gender(o_toks, c_toks):
 def asp(o_toks, c_toks):
     _, _, o_asp = extract_aux_tense_asp(o_toks)
     _, _, c_asp = extract_aux_tense_asp(c_toks)
-    if o_asp == c_asp:
+    if o_asp == c_asp or None in {o_asp, c_asp}:
         return False
 
     o_verbs = [t for t in o_toks if t.pos == 'VERB']
-    c_verbs = [t for t in o_toks if t.pos == 'VERB']
+    c_verbs = [t for t in c_toks if t.pos == 'VERB']
     if len(o_verbs) == len(c_verbs) > 0:
         for ov, cv in zip(o_verbs, c_verbs):
             if not related_stems(ov.lemma, cv.lemma):
