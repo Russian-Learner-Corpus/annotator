@@ -135,6 +135,8 @@ def one_sided_lex(toks):
 
 
 def get_two_sided_type(o_toks, c_toks):
+    if word_order(o_toks, c_toks):
+        return "WO"
     if brev(o_toks, c_toks):
         return "Brev"
     if tense(o_toks, c_toks):
@@ -196,9 +198,6 @@ def get_two_sided_type(o_toks, c_toks):
         return "Space+Ins"
     if space_del(o_toks, c_toks):
         return "Space+Del"
-
-    if word_order(o_toks, c_toks):
-        return "WO"
 
     if infl(o_toks, c_toks):
         return "Infl"
