@@ -312,7 +312,7 @@ def gender(o_toks, c_toks):
         return False
 
     pos_set = {tok.pos for tok in o_toks + c_toks}
-    return len(pos_set & {'VERB', 'PROPN', 'NOUN', 'PRON'}) > 0
+    return len(pos_set & {'PROPN', 'NOUN', 'PRON'}) > 0
 
 
 # SYNTAX
