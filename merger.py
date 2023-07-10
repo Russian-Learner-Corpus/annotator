@@ -14,11 +14,9 @@ def get_rule_edits(alignment):
     """ Merges edits based on a set of rules """
     edits = []
     for op, group in groupby(alignment.align_seq,
-                             lambda x: x[0][0] if x[0][0] in {"M", "T"} else False):
+                             lambda x: "T" if x[0][0] == "T" else False):
         group = list(group)
-        if op == "M":
-            continue
-        elif op == "T":
+        if op == "T":
             for seq in group:
                 edits.append(Edit(alignment.orig, alignment.cor, seq[1:]))
         else:
@@ -30,36 +28,67 @@ def get_rule_edits(alignment):
 
 def process_seq(seq, alignment):
     """ Processes a given sequence for merging based on rules"""
-    if len(seq) <= 1:
-        return seq
+
     ops = [op[0] for op in seq]
-    if set(ops) == {"D"} or set(ops) == {"I"}:
+    unique_ops = set(ops)
+    if unique_ops == {"D"} or unique_ops == {"I"}:
         return merge_edits(seq)
+    if unique_ops <= {"M"}:
+        return []
+
+    # ignore leading and trailing matches
+    matches = ''.join(['M' if op == 'M' else 'N' for op in ops])
+    left, right = matches.index('N'), matches.rindex('N') + 1
+    seq = seq[left:right]
+    ops = ops[left:right]
+
+    if len(seq) == 1:
+        return seq
+
 
     content = False
     # We loop through all possible combinations of tokens in the sequence, starting from the largest
     combos = list(combinations(range(0, len(seq)), 2))
     combos.sort(key=lambda x: x[1] - x[0], reverse=True)
+
     for start, end in combos:
-        # Only consider sequences that have substitutions in them
-        if "S" not in ops[start:end + 1]:
-            continue
+
+        subops = ops[start : end + 1]
         o = alignment.orig[seq[start][1]:seq[end][2]]
         c = alignment.cor[seq[start][3]:seq[end][4]]
-        if o[-1].text.lower() == c[-1].text.lower():
+        o_toks = [tok.text.lower() for tok in o]
+        c_toks = [tok.text.lower() for tok in c]
+
+        if "S" not in subops:
+            # Check for a word-order error:
+            # contains the same number of inserts and deletes;
+            # original and corrected contain the same tokens
+            if (subops.count('I') == subops.count('D') > 0 and
+                    set(o_toks) == set(c_toks)):
+                return (merge_edits(seq[start:end + 1]) +
+                        process_seq(seq[end + 1:], alignment))
+            # If not word order, consider only sequences with substitutions
+            continue
+
+        # matches are allowed only in word-order errors
+        if "M" in subops:
+            continue
+
+        if o_toks[-1] == c_toks[-1]:
             if start == 0 and ((len(o) == 1 and c[0].text[0].isupper()) or
                                (len(c) == 1 and o[0].text[0].isupper())):
                 return merge_edits(seq[start:end + 1]) + \
                        process_seq(seq[end + 1:], alignment)
+
             if (len(o) > 1 and is_punct(o[-2])) or \
                     (len(c) > 1 and is_punct(c[-2])):
                 return process_seq(seq[:end - 1], alignment) + \
                        merge_edits(seq[end - 1:end + 1]) + \
                        process_seq(seq[end + 1:], alignment)
 
-        o_str = "".join([tok.text.lower() for tok in o])
+        o_str = "".join(o_toks)
         s = sub("['-]", "", o_str)
-        c_str = "".join([tok.text.lower() for tok in c])
+        c_str = "".join(c_toks)
         t = sub("['-]", "", c_str)
         if s == t or (len(o) + len(c) <= 4 and
                       '-' in o_str + c_str and
@@ -96,10 +125,11 @@ def process_seq(seq, alignment):
                        process_seq(seq[start + 1:], alignment)
         if not pos_set.isdisjoint(open_pos):
             content = True
+
     if content:
         return merge_edits(seq)
-    else:
-        return seq
+
+    return [op for op in seq if op[0] != 'M']
 
 
 def is_punct(token):
