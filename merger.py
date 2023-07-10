@@ -1,6 +1,5 @@
 """ Module implementing merging rules. """
 
-
 from edit import Edit
 from itertools import combinations, groupby
 from re import sub
@@ -26,110 +25,107 @@ def get_rule_edits(alignment):
     return edits
 
 
+def merge_by_indices(start, end, seq, alignment):
+    return (process_seq(seq[:start], alignment) +
+            merge_edits(seq[start : end + 1]) +
+            process_seq(seq[end + 1:], alignment))
+
+
 def process_seq(seq, alignment):
     """ Processes a given sequence for merging based on rules"""
-
     ops = [op[0] for op in seq]
+
+    # delete leading and trailing matches
+    matches = ''.join(['M' if op == 'M' else 'N' for op in ops])
+    left, right = matches.find('N'), matches.rfind('N') + 1
+    seq = seq[left:right]
+    if len(seq) <= 1:
+        return seq
+
+    ops = ops[left:right]
     unique_ops = set(ops)
     if unique_ops == {"D"} or unique_ops == {"I"}:
         return merge_edits(seq)
-    if unique_ops <= {"M"}:
-        return []
 
-    # ignore leading and trailing matches
-    matches = ''.join(['M' if op == 'M' else 'N' for op in ops])
-    left, right = matches.index('N'), matches.rindex('N') + 1
-    seq = seq[left:right]
-    ops = ops[left:right]
-
-    if len(seq) == 1:
-        return seq
-
-
-    content = False
-    # We loop through all possible combinations of tokens in the sequence, starting from the largest
+    # Loop through combinations of adjacent tokens, starting with the largest
     combos = list(combinations(range(0, len(seq)), 2))
     combos.sort(key=lambda x: x[1] - x[0], reverse=True)
 
     for start, end in combos:
+        subops = ops[start: end + 1]
+        o_seq = alignment.orig[seq[start][1]:seq[end][2]]
+        c_seq = alignment.cor[seq[start][3]:seq[end][4]]
+        o_toks = [tok.text.lower() for tok in o_seq]
+        c_toks = [tok.text.lower() for tok in c_seq]
 
-        subops = ops[start : end + 1]
-        o = alignment.orig[seq[start][1]:seq[end][2]]
-        c = alignment.cor[seq[start][3]:seq[end][4]]
-        o_toks = [tok.text.lower() for tok in o]
-        c_toks = [tok.text.lower() for tok in c]
+        if 'S' in subops:  # not just a word-order error
+            if 'M' not in subops:  # else should be split into several edits
 
-        if "S" not in subops:
-            # Check for a word-order error:
-            # contains the same number of inserts and deletes;
-            # original and corrected contain the same tokens
-            if (subops.count('I') == subops.count('D') > 0 and
-                    set(o_toks) == set(c_toks)):
-                return (merge_edits(seq[start:end + 1]) +
-                        process_seq(seq[end + 1:], alignment))
-            # If not word order, consider only sequences with substitutions
-            continue
+                # the last tokens differ in capitalization only
+                if o_toks[-1] == c_toks[-1]:
+                    if ((len(o_seq) == 1 and c_seq[0].text[0].isupper()) or
+                            (len(c_seq) == 1 and o_seq[0].text[0].isupper())):
+                        return merge_by_indices(start, end, seq, alignment)
 
-        # matches are allowed only in word-order errors
-        if "M" in subops:
-            continue
+                    # merge the last two tokens if the second to last is punct
+                    if ((len(o_seq) > 1 and is_punct(o_seq[-2])) or
+                            (len(c_seq) > 1 and is_punct(c_seq[-2]))):
+                        return merge_by_indices(end - 1, end, seq, alignment)
 
-        if o_toks[-1] == c_toks[-1]:
-            if start == 0 and ((len(o) == 1 and c[0].text[0].isupper()) or
-                               (len(c) == 1 and o[0].text[0].isupper())):
-                return merge_edits(seq[start:end + 1]) + \
-                       process_seq(seq[end + 1:], alignment)
+                # hyphens and whitespace
+                o_str = "".join(o_toks)
+                s = sub("['-]", "", o_str)
+                c_str = "".join(c_toks)
+                t = sub("['-]", "", c_str)
+                if s == t or (len(o_seq) + len(c_seq) <= 4 and
+                              '-' in o_str + c_str and
+                              Levenshtein.ratio(s, t) >= .75):
+                    return merge_by_indices(start, end, seq, alignment)
 
-            if (len(o) > 1 and is_punct(o[-2])) or \
-                    (len(c) > 1 and is_punct(c[-2])):
-                return process_seq(seq[:end - 1], alignment) + \
-                       merge_edits(seq[end - 1:end + 1]) + \
-                       process_seq(seq[end + 1:], alignment)
+                # the same POS, auxiliary and reflexive verbs
+                o_pos_set = set([tok.pos for tok in o_seq])
+                c_pos_set = set([tok.pos for tok in c_seq])
+                pos_set = o_pos_set | c_pos_set
+                if len(o_seq) != len(c_seq) and (len(pos_set) == 1 or
+                                                 pos_set <= {'AUX', 'PART', 'VERB'} or
+                                                 {'VERB', 'PRON'} == o_pos_set or
+                                                 {'VERB', 'PRON'} == c_pos_set):
+                    return merge_by_indices(start, end, seq, alignment)
 
-        o_str = "".join(o_toks)
-        s = sub("['-]", "", o_str)
-        c_str = "".join(c_toks)
-        t = sub("['-]", "", c_str)
-        if s == t or (len(o) + len(c) <= 4 and
-                      '-' in o_str + c_str and
-                      Levenshtein.ratio(s, t) >= .75):
-            return process_seq(seq[:start], alignment) + \
-                   merge_edits(seq[start:end + 1]) + \
-                   process_seq(seq[end + 1:], alignment)
+                # the same number and case
+                o_numcases = [(tok.feats.get('Number'), tok.feats.get('Case')) for tok in o_seq]
+                c_numcases = [(tok.feats.get('Number'), tok.feats.get('Case')) for tok in c_seq]
+                if len(set(o_numcases)) == 1 and len(set(c_numcases)) == 1:
+                    return merge_by_indices(start, end, seq, alignment)
 
-        o_pos_set = set([tok.pos for tok in o])
-        c_pos_set = set([tok.pos for tok in c])
-        pos_set = set([tok.pos for tok in o] + [tok.pos for tok in c])
-        if len(o) != len(c) and (len(pos_set) == 1 or
-                                 (o_pos_set | c_pos_set).issubset({'AUX', 'PART', 'VERB'}) or
-                                 {'VERB', 'PRON'} == o_pos_set or
-                                 {'VERB', 'PRON'} == c_pos_set):
-            return process_seq(seq[:start], alignment) + \
-                   merge_edits(seq[start:end + 1]) + \
-                   process_seq(seq[end + 1:], alignment)
+                # don't merge
+                if end - start < 2:
+                    if (len(o_seq) == len(c_seq) == 2 or
+                            (ops[start] == "S" and
+                             char_cost(o_seq[0], c_seq[0]) > 0.75) or
+                            (ops[end] == "S" and
+                             char_cost(o_seq[-1], c_seq[-1]) > 0.75)):
+                        return (process_seq(seq[:start + 1], alignment) +
+                                process_seq(seq[start + 1:], alignment))
 
-        o_numcases = [(tok.feats.get('Number'), tok.feats.get('Case')) for tok in o]
-        c_numcases = [(tok.feats.get('Number'), tok.feats.get('Case')) for tok in c]
-        if len(set(o_numcases)) == 1 and len(set(c_numcases)) == 1:
-            return process_seq(seq[:start], alignment) + \
-                   merge_edits(seq[start:end + 1]) + \
-                   process_seq(seq[end + 1:], alignment)
+        # no substitutions; maybe, word-order error
+        elif (subops[0] != 'M' != subops[-1] and
+              subops.count('I') == subops.count('D') > 0 and
+              set(o_toks) == set(c_toks)):
+            return merge_by_indices(start, end, seq, alignment)
 
-        if end - start < 2:
-            if len(o) == len(c) == 2:
-                return process_seq(seq[:start + 1], alignment) + \
-                       process_seq(seq[start + 1:], alignment)
-            if (ops[start] == "S" and char_cost(o[0], c[0]) > 0.75) or \
-                    (ops[end] == "S" and char_cost(o[-1], c[-1]) > 0.75):
-                return process_seq(seq[:start + 1], alignment) + \
-                       process_seq(seq[start + 1:], alignment)
-        if not pos_set.isdisjoint(open_pos):
-            content = True
+    # sequences containing content words
+    seqs = []
+    for merge, group in groupby(seq, lambda x: x[0][0] != "M"):
+        if merge:
+            seqs += merge_by_content(list(group), alignment)
+    return seqs
 
-    if content:
-        return merge_edits(seq)
 
-    return [op for op in seq if op[0] != 'M']
+def merge_by_content(seq, alignment):
+    return seq if open_pos.isdisjoint(
+        set([tok.pos for tok in alignment.orig[seq[0][1]:seq[-1][2]] +
+             alignment.cor[seq[0][3]:seq[-1][4]]])) else merge_edits(seq)
 
 
 def is_punct(token):
