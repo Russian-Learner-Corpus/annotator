@@ -206,13 +206,11 @@ def get_two_sided_type(o_toks, c_toks):
     if syntax(o_toks, c_toks):
         return "Syntax"
 
-    tag = '(Morph)' if morph(o_toks, c_toks) else ''
-    if morph_ml(o_toks, c_toks):
-        return tag + "Morph"
+    if morph(o_toks, c_toks):
+        return "Morph"
     if ortho(o_toks, c_toks):
-        return tag + "Ortho"
-
-    return tag + "Misspell"
+        return "Ortho"
+    return "Misspell"
 
 
 # ORTHOGRAPHY
@@ -424,6 +422,8 @@ def related_stems(first, second):
 
 
 def morph(o_toks, c_toks):
+    if ML:
+        return morph_ml(o_toks, c_toks)
     return (len(o_toks) == len(c_toks) == 1
             and o_toks[0].lemma != c_toks[0].lemma
             and related_stems(o_toks[0].lemma, c_toks[0].lemma))
