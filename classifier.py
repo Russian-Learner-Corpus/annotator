@@ -223,7 +223,7 @@ def graph(o_toks, _):
     return False
 
 
-def space_ins(o_toks, c_toks):
+def space_del(o_toks, c_toks):
     o_join = "".join([o.text.lower() for o in o_toks])
     c_join = "".join([c.text.lower() for c in c_toks])
     if o_join == c_join and len(o_toks) < len(c_toks):
@@ -231,7 +231,7 @@ def space_ins(o_toks, c_toks):
     return False
 
 
-def space_del(o_toks, c_toks):
+def space_ins(o_toks, c_toks):
     o_join = "".join([o.text.lower() for o in o_toks])
     c_join = "".join([c.text.lower() for c in c_toks])
     if o_join == c_join and len(o_toks) > len(c_toks):
@@ -239,7 +239,7 @@ def space_del(o_toks, c_toks):
     return False
 
 
-def hyphen_ins(o_toks, c_toks):
+def hyphen_del(o_toks, c_toks):
     o_join = "".join([o.text.lower() for o in o_toks])
     c_join = "".join([c.text.lower() for c in c_toks])
     if '-' in c_join and '-' not in o_join and lev(o_join, re.sub('-', '', c_join)) >= .75:
@@ -247,7 +247,7 @@ def hyphen_ins(o_toks, c_toks):
     return False
 
 
-def hyphen_del(o_toks, c_toks):
+def hyphen_ins(o_toks, c_toks):
     o_join = "".join([o.text.lower() for o in o_toks])
     c_join = "".join([c.text.lower() for c in c_toks])
     if '-' in o_join and '-' not in c_join and lev(re.sub('-', '', o_join), c_join) >= .75:
@@ -552,11 +552,13 @@ def ref(o_toks, c_toks):
     return False
 
 
+def is_conj(toks):
+    return ({t.pos for t in toks}.issubset({'CCONJ', 'SCONJ'}) or   # natasha
+            all(get_pos(t.text) == 'CONJ' for t in toks))           # pymorphy
+
+
 def conj(o_toks, c_toks):
-    pos_set = {tok.pos for tok in o_toks + c_toks}
-    if pos_set.issubset({'CCONJ', 'SCONJ'}):
-        return True
-    return False
+    return is_conj(o_toks) and is_conj(c_toks)
 
 
 def com(o_toks, c_toks):
