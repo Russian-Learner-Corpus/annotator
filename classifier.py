@@ -5,13 +5,18 @@ import re
 from Levenshtein import distance, ratio as lev
 from nltk.stem.snowball import SnowballStemmer
 
-ML = False  # True
+ML = False
+# ML = True
 
 if ML:
     from morph_ortho import is_morph
 
 pymorphy_parser = pymorphy2.MorphAnalyzer()
 stemmer = SnowballStemmer('russian')
+
+
+def get_normal_form(word):
+    return pymorphy_parser.parse(word)[0].normal_form
 
 
 def get_pos(word):
@@ -598,18 +603,16 @@ def cs(o_toks, c_toks):
 
 
 def lex(o_toks, c_toks):
-    if (len(o_toks) == len(c_toks) == 1 and
+    return (len(o_toks) == len(c_toks) == 1 and
             pymorphy_parser.word_is_known(o_toks[0].text) and
-            o_toks[0].lemma != c_toks[0].lemma):
-        return True
-    return False
+            get_normal_form(o_toks[0].text) !=
+            get_normal_form(c_toks[0].text) and
+            {o_toks[0].text[:2].lower(), c_toks[0].text[:2].lower()} !=
+            {'не', 'ни'})
 
 
 def prep(o_toks, c_toks):
-    pos_set = {tok.pos for tok in c_toks}
-    if pos_set.issubset({'ADP'}):
-        return True
-    return False
+    return {tok.pos for tok in o_toks + c_toks}.issubset({'ADP'})
 
 
 def ortho(o_toks, c_toks):
