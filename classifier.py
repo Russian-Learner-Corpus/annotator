@@ -608,7 +608,9 @@ def lex(o_toks, c_toks):
             get_normal_form(o_toks[0].text) !=
             get_normal_form(c_toks[0].text) and
             {o_toks[0].text[:2].lower(), c_toks[0].text[:2].lower()} !=
-            {'не', 'ни'})
+            {'не', 'ни'} and
+            # double letters or letters in a wrong order are ortho
+            set(o_toks[0].text) != set(c_toks[0].text))
 
 
 def prep(o_toks, c_toks):
