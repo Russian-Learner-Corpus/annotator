@@ -6,7 +6,7 @@ from re import sub
 import Levenshtein
 from string import punctuation
 
-open_pos = {'ADJ', 'AUX', 'ADV', 'NOUN', 'VERB'}
+open_pos = {'ADJ', 'AUX', 'ADV', 'NOUN'}#, 'VERB'}
 
 
 def get_rule_edits(alignment):
@@ -93,9 +93,13 @@ def process_seq(seq, alignment):
                     return merge_by_indices(start, end, seq, alignment)
 
                 # the same number and case
-                o_numcases = [(tok.feats.get('Number'), tok.feats.get('Case')) for tok in o_seq]
-                c_numcases = [(tok.feats.get('Number'), tok.feats.get('Case')) for tok in c_seq]
-                if len(set(o_numcases)) == 1 and len(set(c_numcases)) == 1:
+                o_numcases = set([(tok.feats.get('Number'),
+                                   tok.feats.get('Case'))
+                                  for tok in o_seq])
+                c_numcases = set([(tok.feats.get('Number'),
+                                   tok.feats.get('Case'))
+                                  for tok in c_seq])
+                if len(o_numcases) == 1 == len(c_numcases) and o_numcases != c_numcases:
                     return merge_by_indices(start, end, seq, alignment)
 
                 # don't merge

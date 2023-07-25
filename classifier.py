@@ -161,17 +161,11 @@ def get_two_sided_type(o_toks, c_toks):
             return "Agrcase"
     if agrnum(o_toks, c_toks):
         return "Agrnum"
-    # if agrcase(o_toks, c_toks):
-    #    return "Agrcase"
     if agrpers(o_toks, c_toks):
         return "Agrpers"
     if agrgender(o_toks, c_toks):
         return "Agrgender"
 
-#    if tense(o_toks, c_toks):
-#        return "Tense"
-#    if passive(o_toks, c_toks):
-#        return "Passive"
     if refl(o_toks, c_toks):
         return "Refl"
     if asp(o_toks, c_toks):
@@ -211,6 +205,8 @@ def get_two_sided_type(o_toks, c_toks):
     if syntax(o_toks, c_toks):
         return "Syntax"
 
+    if typical_ortho(o_toks, c_toks):
+        return "Ortho"
     if morph(o_toks, c_toks):
         return "Morph"
     if ortho(o_toks, c_toks):
@@ -261,7 +257,6 @@ def hyphen_ins(o_toks, c_toks):
 
 
 # MORPHOLOGY
-
 
 def infl(o_toks, c_toks):
     if ((len(o_toks) == len(c_toks) == 1) and
@@ -622,6 +617,18 @@ def ortho(o_toks, c_toks):
             (lev(o_toks[0].text, c_toks[0].text) >= 0.8)):
         return True
     return False
+
+
+def typical_ortho(o_toks, c_toks):
+    if len(o_toks) == len(c_toks) > 1:
+        return False
+    ot, ct = o_toks[0].text, c_toks[0].text
+    if len(ot) != len(ct):
+        return False
+    for o, c in zip(ot, ct):
+        if o != c and {o, c} != {'е', 'э'} and {o, c} != {'и', 'ы'}:
+            return False
+    return True
 
 
 def aux(o_toks, c_toks):
