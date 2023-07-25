@@ -545,11 +545,13 @@ def mode(o_toks, c_toks):
     return False
 
 
+def is_pronoun(tok):
+    return tok.pos in {'DET', 'PRON'}
+
+
 def ref(o_toks, c_toks):
-    pos_set = {tok.pos for tok in o_toks + c_toks}
-    if pos_set.issubset({'DET', 'PRON'}):
-        return True
-    return False
+    return (all(is_pronoun(t) for t in o_toks) or
+            all(is_pronoun(t) for t in c_toks))
 
 
 def is_introductory_word(text):
