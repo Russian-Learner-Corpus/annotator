@@ -137,6 +137,8 @@ def one_sided_lex(toks):
 def get_two_sided_type(o_toks, c_toks):
     if word_order(o_toks, c_toks):
         return "WO"
+    if cs(o_toks, c_toks):
+        return "CS"
     if brev(o_toks, c_toks):
         return "Brev"
     if tense(o_toks, c_toks):
@@ -177,18 +179,6 @@ def get_two_sided_type(o_toks, c_toks):
     if mode(o_toks, c_toks):
         return "Mode"
 
-    if conj(o_toks, c_toks):
-        return "Conj"
-    if ref(o_toks, c_toks):
-        return "Ref"
-    if prep(o_toks, c_toks):
-        return "Prep"
-
-    if cs(o_toks, c_toks):
-        return "CS"
-    if graph(o_toks, c_toks):
-        return "Graph"
-
     if hyphen_ins(o_toks, c_toks):
         return "Hyphen+Ins"
     if hyphen_del(o_toks, c_toks):
@@ -198,6 +188,16 @@ def get_two_sided_type(o_toks, c_toks):
         return "Space+Ins"
     if space_del(o_toks, c_toks):
         return "Space+Del"
+
+    if conj(o_toks, c_toks):
+        return "Conj"
+    if ref(o_toks, c_toks):
+        return "Ref"
+    if prep(o_toks, c_toks):
+        return "Prep"
+
+    if graph(o_toks, c_toks):
+        return "Graph"
 
     if infl(o_toks, c_toks):
         return "Infl"
@@ -552,13 +552,17 @@ def ref(o_toks, c_toks):
     return False
 
 
-def is_conj(toks):
-    return ({t.pos for t in toks}.issubset({'CCONJ', 'SCONJ'}) or   # natasha
-            all(get_pos(t.text) == 'CONJ' for t in toks))           # pymorphy
+def is_introductory_word(text):
+    return 'Prnt' in pymorphy_parser.parse(text)[0].tag
+
+
+def is_conj(tok):
+    return tok.pos in {'CCONJ', 'SCONJ'} or (get_pos(tok.text) == 'CONJ' and
+                                             not is_introductory_word(tok.text))
 
 
 def conj(o_toks, c_toks):
-    return is_conj(o_toks) and is_conj(c_toks)
+    return any(is_conj(t) for t in o_toks + c_toks)
 
 
 def com(o_toks, c_toks):
