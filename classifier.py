@@ -284,7 +284,7 @@ def num(o_toks, c_toks):
             (not (None in c_nums)) and
             (o_nums != c_nums) and
             (sum(lemmas_match_flags) == len(lemmas_match_flags)) and
-            (len(pos_set & {'VERB', 'PROPN', 'NOUN', 'PRON'}) > 0)):
+            (len(pos_set & {'PROPN', 'NOUN', 'PRON'}) > 0)):
         return True
 
     return False
