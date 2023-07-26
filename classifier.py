@@ -19,8 +19,9 @@ def get_normal_form(word):
     return pymorphy_parser.parse(word)[0].normal_form
 
 
-def get_pos(word):
-    return pymorphy_parser.parse(word)[0].tag.POS
+def get_pos(word, min_score=-1):
+    p = pymorphy_parser.parse(word)[0]
+    return p.tag.POS if p.score > min_score else None
 
 
 def get_number(word):
@@ -559,7 +560,7 @@ def is_introductory_word(text):
 
 
 def is_conj(tok):
-    return tok.pos in {'CCONJ', 'SCONJ'} or (get_pos(tok.text) == 'CONJ' and
+    return tok.pos in {'CCONJ', 'SCONJ'} or (get_pos(tok.text, 0.6) == 'CONJ' and
                                              not is_introductory_word(tok.text))
 
 
