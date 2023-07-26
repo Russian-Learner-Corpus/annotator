@@ -37,7 +37,8 @@ def get_aspect(verb):
 
 
 def get_possible_num_cases(word):
-    return set((p.tag.number, p.tag.case) for p in pymorphy_parser.parse(word))
+    return set((p.tag.number, p.tag.case) for p in pymorphy_parser.parse(word)
+               if p.tag.case)
 
 
 def classify(edit):
