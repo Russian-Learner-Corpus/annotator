@@ -36,8 +36,8 @@ def get_aspect(verb):
     return pymorphy_parser.parse(verb)[0].tag.aspect
 
 
-def get_possible_cases(word):
-    return set(p.tag.case for p in pymorphy_parser.parse(word))
+def get_possible_num_cases(word):
+    return set((p.tag.number, p.tag.case) for p in pymorphy_parser.parse(word))
 
 
 def classify(edit):
@@ -473,15 +473,15 @@ def wrong_case(o_toks, c_toks):
     if len(o_toks) != len(c_toks):
         return False
 
-    o_cases = set.intersection(*[get_possible_cases(t.text) for t in o_toks])
-    if not o_cases:
+    o_num_cases = set.intersection(*[get_possible_num_cases(t.text) for t in o_toks])
+    if not o_num_cases:
         return False
 
-    c_cases = set.intersection(*[get_possible_cases(t.text) for t in c_toks])
-    if not c_cases:
+    c_num_cases = set.intersection(*[get_possible_num_cases(t.text) for t in c_toks])
+    if not c_num_cases:
         return False
 
-    if o_cases & c_cases:   # can be the same case
+    if o_num_cases & c_num_cases:   # can be the same case
         return False
 
     for o, c in zip(o_toks, c_toks):
