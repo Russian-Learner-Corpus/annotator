@@ -1,4 +1,6 @@
 """ Main collection of functions for classifying edits """
+import token
+
 import pymorphy2
 import re
 
@@ -276,7 +278,7 @@ def num(o_toks, c_toks):
 
     o_nums = [o_tok.feats.get('Number', None) for o_tok in o_toks]
     c_nums = [c_tok.feats.get('Number', None) for c_tok in c_toks]
-    pos_set = {tok.pos for tok in o_toks + c_toks}
+    pos_set = {get_pos(tok.text) for tok in o_toks + c_toks}
     lemmas_match_flags = [(o_toks[i].lemma == c_toks[i].lemma) for i in range(len(o_toks))]
 
     if ((len(set(o_nums)) == len(set(c_nums)) == 1) and
@@ -284,7 +286,7 @@ def num(o_toks, c_toks):
             (not (None in c_nums)) and
             (o_nums != c_nums) and
             (sum(lemmas_match_flags) == len(lemmas_match_flags)) and
-            (len(pos_set & {'PROPN', 'NOUN', 'PRON'}) > 0)):
+            (len(pos_set & {'NOUN', 'NPRO'}) > 0)):
         return True
 
     return False
@@ -483,6 +485,10 @@ def wrong_case(o_toks, c_toks):
         return False
 
     if o_num_cases & c_num_cases:   # can be the same case
+        return False
+
+    if not ({n for (n, c) in o_num_cases} & {n for (n, c) in c_num_cases}):
+        # different numbers
         return False
 
     for o, c in zip(o_toks, c_toks):
