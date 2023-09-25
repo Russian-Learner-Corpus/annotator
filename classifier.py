@@ -7,11 +7,11 @@ import re
 from Levenshtein import distance, ratio as lev
 from nltk.stem.snowball import SnowballStemmer
 
-ML = False
-# ML = True
+# ML = False
+ML = True
 
 if ML:
-    from morph_ortho import is_morph
+    from morph_ortho import ortho_morph_predict
 
 pymorphy_parser = pymorphy2.MorphAnalyzer()
 stemmer = SnowballStemmer('russian')
@@ -434,9 +434,10 @@ def morph(o_toks, c_toks):
 
 
 def morph_ml(o_toks, c_toks):
+    print('working', o_toks, c_toks, ortho_morph_predict([o_toks[0].text], [c_toks[0].text])[0])
     return (ML and
-            len(o_toks) == len(c_toks) == 1
-            and is_morph(o_toks[0].text, c_toks[0].text))
+            len(o_toks) == len(c_toks) == 1 and
+            ortho_morph_predict([o_toks[0].text], [c_toks[0].text])[0])
 
 
 def refl(o_toks, c_toks):
