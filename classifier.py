@@ -423,7 +423,7 @@ def related_stems(first, second):
     min_length = min(len(first_stem), len(second_stem))
     return (distance(first_stem[:min_length], second_stem[:min_length]) < 2 or
             distance(first_stem[-min_length:], second_stem[-min_length:]) < 2 or
-            distance(first_stem, second_stem) == 2)
+            distance(first_stem, second_stem) <= 2)
 
 
 def morph(o_toks, c_toks):
