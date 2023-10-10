@@ -21,4 +21,4 @@ Orig: [22, 23, 'одно'], Cor: [23, 24, 'одном'], Type: 'Agrcase'
 Orig: [23, 25, 'простое предложение'], Cor: [24, 26, 'простом предложении'], Type: 'Gov'
 ```
 
-Model for morphological/ortho mistakes can be found [here](https://drive.google.com/file/d/1UzffmjWBGy95YKFNxL-zRr8QHxnnmIz2/view?usp=sharing)
+Model for morphological/ortho mistakes classification can be found [here](https://drive.google.com/file/d/1UzffmjWBGy95YKFNxL-zRr8QHxnnmIz2/view?usp=sharing)
