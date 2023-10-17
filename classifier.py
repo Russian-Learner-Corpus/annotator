@@ -34,8 +34,13 @@ def get_tense(verb):
     return pymorphy_parser.parse(verb)[0].tag.tense
 
 
+def get_possible_aspects(verb):
+    aspects = [p.tag.aspect for p in pymorphy_parser.parse(verb)]
+    return list(dict.fromkeys(aspects))  # remove duplicates
+
+
 def get_aspect(verb):
-    return pymorphy_parser.parse(verb)[0].tag.aspect
+    return get_possible_aspects(verb)[0]
 
 
 def get_possible_num_cases(word):
@@ -320,17 +325,19 @@ def gender(o_toks, c_toks):
 
 
 def asp(o_toks, c_toks):
-    _, _, o_asp = extract_aux_tense_asp(o_toks)
-    _, _, c_asp = extract_aux_tense_asp(c_toks)
-    if o_asp == c_asp or None in {o_asp, c_asp}:
+    o_asps = set.union(*(set(get_possible_aspects(t.text)) for t in o_toks))
+    c_asps = set.union(*(set(get_possible_aspects(t.text)) for t in c_toks))
+    if o_asps & c_asps or len(o_asps) == 0 or len(c_asps) == 0:
         return False
 
     o_verbs = [t for t in o_toks if t.pos == 'VERB']
     c_verbs = [t for t in c_toks if t.pos == 'VERB']
-    if len(o_verbs) == len(c_verbs) > 0:
-        for ov, cv in zip(o_verbs, c_verbs):
-            if not related_stems(ov.lemma, cv.lemma):
-                return False
+    if len(o_verbs) != len(c_verbs) or len(c_verbs) == 0:
+        return False
+
+    for ov, cv in zip(o_verbs, c_verbs):
+        if not related_stems(ov.lemma, cv.lemma):
+            return False
 
     return True
 
@@ -391,11 +398,12 @@ def tense(o_toks, c_toks):
     if len(o_toks) == len(c_toks) == 1:
         o_tok = o_toks[0]
         c_tok = c_toks[0]
-        if ((o_tok.pos == c_tok.pos == 'VERB') and
-                ('Tense' in o_tok.feats) and
-                ('Tense' in c_tok.feats) and
-                (o_tok.lemma == c_tok.lemma) and
-                (o_tok.feats['Tense'] != c_tok.feats['Tense'])):
+        if (o_tok.pos == c_tok.pos == 'VERB' and
+                'Tense' in o_tok.feats and
+                'Tense' in c_tok.feats and
+                o_tok.lemma == c_tok.lemma and
+                o_tok.feats['Tense'] != c_tok.feats['Tense'] and
+                o_tok.rel == c_tok.rel):
             return True
     # Past/Present <-> Future switch
     else:
@@ -485,7 +493,7 @@ def wrong_case(o_toks, c_toks):
     if not c_num_cases:
         return False
 
-    if o_num_cases & c_num_cases:   # can be the same case
+    if o_num_cases & c_num_cases:  # can be the same case
         return False
 
     if not ({n for (n, c) in o_num_cases} & {n for (n, c) in c_num_cases}):
