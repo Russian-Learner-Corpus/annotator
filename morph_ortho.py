@@ -16,7 +16,6 @@ from sklearn.preprocessing import MultiLabelBinarizer
 
 # model_checkpoint = 'seq_clf/morph_ortho/roberta_custom_weighted'
 
-threshold = 0.3
 
 model = BertForSequenceClassification.from_pretrained("DeepPavlov/rubert-base-cased", num_labels=1)
 tokenizer = BertTokenizer.from_pretrained('DeepPavlov/rubert-base-cased', do_lower_case=True)
@@ -46,7 +45,7 @@ def prep_text_for_model(original, corrected, tokenizer, max_length=200):
   return test_data, test_dataloader
 
 
-def ortho_morph_predict(original, corrected, tokenizer=tokenizer, model=model, threshold=0.25):
+def ortho_morph_predict(original, corrected, tokenizer=tokenizer, model=model, threshold=0.4):
   """Returns model prediction if mistake belongs to morth or ortho class
 
   Parameters
