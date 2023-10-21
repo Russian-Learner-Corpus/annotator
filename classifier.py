@@ -211,8 +211,8 @@ def get_two_sided_type(o_toks, c_toks):
         return "Infl"
     if lex(o_toks, c_toks):
         return "Lex"
-    if syntax(o_toks, c_toks):
-        return "Syntax"
+    if constr(o_toks, c_toks):
+        return "Constr"
 
     if typical_ortho(o_toks, c_toks):
         return "Ortho"
@@ -658,7 +658,7 @@ def aux(o_toks, c_toks):
     return False
 
 
-def syntax(o_toks, c_toks):
+def constr(o_toks, c_toks):
     if len(o_toks) > 1 or len(c_toks) > 1:
         return True
     return False
