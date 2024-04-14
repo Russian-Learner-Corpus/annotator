@@ -153,6 +153,8 @@ def get_two_sided_type(o_toks, c_toks):
         return "Ortho"
     if word_order(o_toks, c_toks):
         return "WO"
+    if graph(o_toks, c_toks):
+        return "Graph"
     if cs(o_toks, c_toks):
         return "CS"
     if brev(o_toks, c_toks):
@@ -205,9 +207,6 @@ def get_two_sided_type(o_toks, c_toks):
         return "Ref"
     if prep(o_toks, c_toks):
         return "Prep"
-
-    if graph(o_toks, c_toks):
-        return "Graph"
 
     if infl(o_toks, c_toks):
         return "Infl"
