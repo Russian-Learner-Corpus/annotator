@@ -661,7 +661,7 @@ def typical_ortho(o_toks, c_toks):
     if len(ot) != len(ct):
         return False
     for o, c in zip(ot, ct):
-        if o != c and {o, c} != {'е', 'э'} and {o, c} != {'и', 'ы'}:
+        if o != c and {o, c} != {'е', 'э'} and {o, c} != {'и', 'ы'} and {o, c} != {'а', 'я'}:
             return False
     return True
 
