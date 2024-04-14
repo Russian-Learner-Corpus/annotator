@@ -31,6 +31,19 @@ def merge_by_indices(start, end, seq, alignment):
             process_seq(seq[end + 1:], alignment))
 
 
+def number_case(seq):
+    """If all elements have the same number and case,
+    returns (number, case), otherwise None."""
+    num, case = None, None
+    for tok in reversed(seq):
+        n, c = tok.feats.get('Number'), tok.feats.get('Case')
+        if not num and not case:
+            num, case = n, c
+        elif num != n or (case != c and {case, c} != {'Acc', 'Nom'}):
+            return None
+    return num, case
+
+
 def process_seq(seq, alignment):
     """ Processes a given sequence for merging based on rules"""
     ops = [op[0] for op in seq]
