@@ -149,6 +149,8 @@ def one_sided_lex(toks):
 
 
 def get_two_sided_type(o_toks, c_toks):
+    if capitalization(o_toks, c_toks):
+        return "Ortho"
     if word_order(o_toks, c_toks):
         return "WO"
     if cs(o_toks, c_toks):
@@ -225,6 +227,13 @@ def get_two_sided_type(o_toks, c_toks):
 
 # ORTHOGRAPHY
 
+def capitalization(o_toks, c_toks):
+    if len(o_toks) != len(c_toks):
+        return False
+    for o, c in zip(o_toks, c_toks):
+        if o.text.lower() != c.text.lower():
+            return False
+    return True
 
 def graph(o_toks, _):
     for tok in o_toks:
