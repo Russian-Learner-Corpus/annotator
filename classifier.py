@@ -624,14 +624,24 @@ def cs(o_toks, c_toks):
 
 
 def lex(o_toks, c_toks):
-    return (len(o_toks) == len(c_toks) == 1 and
-            pymorphy_parser.word_is_known(o_toks[0].text) and
-            get_normal_form(o_toks[0].text) !=
-            get_normal_form(c_toks[0].text) and
-            {o_toks[0].text[:2].lower(), c_toks[0].text[:2].lower()} !=
-            {'не', 'ни'} and
-            # double letters or letters in a wrong order are ortho
-            set(o_toks[0].text) != set(c_toks[0].text))
+    if len(o_toks) != 1 or len(c_toks) != 1:
+        return False
+
+    o = o_toks[0].text
+    c = c_toks[0].text
+    if not pymorphy_parser.word_is_known(o) or get_normal_form(o) == get_normal_form(c):
+        return False
+
+    o_letters = set(o)
+    c_letters = set(c)
+    # double letters and letters in a wrong order are ortho
+    if o_letters == c_letters:
+        return False
+    # one-letter errors are ortho
+    return (len(o) - len(c) > 1 or
+            len(c) - len(o) > 1 or
+            len(o_letters - c_letters) > 1 or
+            len(c_letters - o_letters) > 1)
 
 
 def prep(o_toks, c_toks):
