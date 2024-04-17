@@ -30,6 +30,18 @@ def get_number(word):
     return pymorphy_parser.parse(word)[0].tag.number
 
 
+def get_gender(word):
+    first = True
+    for p in pymorphy_parser.parse(word):
+        if first or p.score > 0.001:
+            if p.tag.gender:
+                return p.tag.gender
+            first = False
+        else:
+            return None
+    return None
+
+
 def get_tense(verb):
     return pymorphy_parser.parse(verb)[0].tag.tense
 
@@ -326,7 +338,7 @@ def gender(o_toks, c_toks):
                 for i in range(len(o_toks))]):
         return False
 
-    pos_set = {tok.pos for tok in o_toks + c_toks}
+    pos_set = {tok.pos for tok in c_toks}
     return len(pos_set & {'PROPN', 'NOUN', 'PRON'}) > 0
 
 
@@ -530,8 +542,10 @@ def agrgender(o_toks, c_toks):
     if len(o_toks) != len(c_toks):
         return False
 
-    o_genders = [o_tok.feats.get('Gender', None) for o_tok in o_toks]
-    c_genders = [c_tok.feats.get('Gender', None) for c_tok in c_toks]
+    # o_genders = [o_tok.feats.get('Gender', None) for o_tok in o_toks]
+    # c_genders = [c_tok.feats.get('Gender', None) for c_tok in c_toks]
+    o_genders = [get_gender(o_tok.text) for o_tok in o_toks]
+    c_genders = [get_gender(o_tok.text) for o_tok in c_toks]
     lemmas_match_flags = [(o_toks[i].lemma == c_toks[i].lemma) for i in range(len(o_toks))]
 
     if ((len(set(o_genders)) == len(set(c_genders)) == 1) and
