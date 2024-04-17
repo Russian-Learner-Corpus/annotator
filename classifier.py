@@ -35,12 +35,13 @@ def get_tense(verb):
 
 
 def get_possible_aspects(verb):
-    aspects = [p.tag.aspect for p in pymorphy_parser.parse(verb)]
+    aspects = [p.tag.aspect for p in pymorphy_parser.parse(verb) if p.tag.aspect]
     return list(dict.fromkeys(aspects))  # remove duplicates
 
 
 def get_aspect(verb):
-    return get_possible_aspects(verb)[0]
+    aspects = get_possible_aspects(verb)
+    return aspects[0] if aspects else None
 
 
 def get_possible_num_cases(word):
