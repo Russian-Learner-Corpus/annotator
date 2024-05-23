@@ -1,8 +1,8 @@
 # Annotator
 
-A tool for automatic annotation of Russian texts. Uses two versions of a text: original and corrected to extract and classify edits. Developed as a modification of [ERRANT](https://github.com/chrisjbryant/errant) for Russian texts.
+A tool for automatic error annotation in Russian sentences. Taking as input an original sentence and its correction, it extracts and classifies changes according to the [RLC type system](https://aclanthology.org/2024.lrec-main.1241.pdf). Developed as a modification of [ERRANT](https://github.com/chrisjbryant/errant) for Russian texts.
 
-Using it can be as simple as 
+Usage: 
 
 ```
 from annotator import Annotator
