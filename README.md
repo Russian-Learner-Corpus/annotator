@@ -5,7 +5,7 @@ A tool for automatic annotation of Russian texts. Uses two versions of a text: o
 Using it can be as simple as 
 
 ```
-from annotator.annotator import Annotator
+from annotator import Annotator
 a = Annotator()
 edits = a.annotate('К тому, что я считаю, что это единственное отличие на самом деле огромное, хотя его можно сформулировать всего лишь одно простое предложение.',
                    'К тому, что я считаю, что это единственное отличие на самом деле огромно, хотя его можно сформулировать всего лишь в одном простом предложении.')
