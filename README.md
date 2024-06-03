@@ -1,4 +1,4 @@
-# Annotator
+# RLC-ERRANT
 
 A tool for automatic error annotation in Russian sentences. Taking as input an original sentence and its correction, it extracts and classifies edits according to the [RLC type system](https://aclanthology.org/2024.lrec-main.1241.pdf). Developed as a modification of [ERRANT](https://github.com/chrisjbryant/errant) for Russian texts.
 
