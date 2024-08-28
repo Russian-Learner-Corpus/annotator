@@ -91,8 +91,8 @@ def get_one_sided_type(toks):
         return 'Prep'
     if one_sided_cs(toks):
         return 'CS'
-    if one_sided_syntax(toks):
-        return 'Syntax'
+    if one_sided_punct(toks):
+        return 'Punct'
     return 'Lex'
 
 
@@ -141,7 +141,7 @@ def one_sided_tense(toks):
     return False
 
 
-def one_sided_syntax(toks):
+def one_sided_punct(toks):
     pos_set = {tok.pos for tok in toks}
     if pos_set.issubset({'PUNCT'}):
         return True
@@ -162,6 +162,8 @@ def one_sided_lex(toks):
 
 
 def get_two_sided_type(o_toks, c_toks):
+    if punct(o_toks, c_toks):
+        return "Punct"
     if capitalization(o_toks, c_toks):
         return "Ortho"
     if word_order(o_toks, c_toks):
@@ -236,6 +238,9 @@ def get_two_sided_type(o_toks, c_toks):
         return "Ortho"
     return "Misspell"
 
+
+def punct(o_toks, c_toks):
+    return one_sided_punct(o_toks) and one_sided_punct(c_toks)
 
 # ORTHOGRAPHY
 
