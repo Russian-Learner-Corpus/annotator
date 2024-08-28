@@ -7,14 +7,33 @@ from natasha import (
     NewsEmbedding,
     NewsMorphTagger,
     NewsSyntaxParser,
-    Doc
+    Doc,
+    segment
 )
+from razdel import tokenize
+
+
+class CyrLatSegmenter(Segmenter):
+    def tokenize(self, text):
+        tokens = []
+        last = -1
+        for t in tokenize(text):
+            if last < 0:
+                tokens = [t]
+            elif t.start == last and tokens[-1].text[-1].isalnum() and t.text[0].isalnum():
+                tokens[-1].text += t.text
+                tokens[-1].stop = t.stop
+            else:
+                tokens.append(t)
+            last = t.stop
+        for t in tokens:
+            yield segment.adapt_token(t)
 
 
 class TextProcessor:
     def __init__(self):
         self.emb = NewsEmbedding()
-        self.segmenter = Segmenter()
+        self.segmenter = CyrLatSegmenter()
         self.morph_vocab = MorphVocab()
         self.morph_tagger = NewsMorphTagger(self.emb)
         self.syntax_parser = NewsSyntaxParser(self.emb)
