@@ -127,9 +127,11 @@ def process_seq(seq, alignment):
                                 process_seq(seq[start + 1:], alignment))
 
         # no substitutions; maybe, word-order error
-        elif (subops[0] != 'M' != subops[-1] and
-              subops.count('I') == subops.count('D') > 0 and
-              set(o_toks) == set(c_toks)):
+        elif ((subops[0] != 'M' != subops[-1] and
+               subops.count('I') == subops.count('D') > 0 and
+               set(o_toks) == set(c_toks)) or
+              # merge inserts in the tail
+              (end == len(ops) - 1 and subops.count('I') == len(subops))):
             return merge_by_indices(start, end, seq, alignment)
 
     # sequences containing content words

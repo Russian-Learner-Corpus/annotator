@@ -89,11 +89,11 @@ def get_one_sided_type(toks):
         return 'Ref'
     if one_sided_prep(toks):
         return 'Prep'
-    if one_sided_cs(toks):
-        return 'CS'
+    # if one_sided_cs(toks):
+    #    return 'CS'
     if one_sided_punct(toks):
         return 'Punct'
-    return 'Lex'
+    return 'Lex' if len(toks) == 1 else 'Constr'
 
 
 def one_sided_cs(toks):
@@ -111,10 +111,7 @@ def one_sided_mode(toks):
 
 def one_sided_ref(toks):
     pos_set = {tok.pos for tok in toks}
-
-    if pos_set.issubset({'DET', 'PRON'}):
-        return True
-    return False
+    return pos_set.issubset({'DET', 'PRON', 'ADP'}) and pos_set != {'ADP'}
 
 
 def one_sided_conj(toks):
@@ -251,6 +248,7 @@ def capitalization(o_toks, c_toks):
         if o.text.lower() != c.text.lower():
             return False
     return True
+
 
 def graph(o_toks, _):
     for tok in o_toks:
