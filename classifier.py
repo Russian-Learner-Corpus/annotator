@@ -366,14 +366,17 @@ def asp(o_toks, c_toks):
 def passive(o_toks, c_toks):
     o_pos = [get_pos(o_tok.text) for o_tok in o_toks]
     c_pos = [get_pos(c_tok.text) for c_tok in c_toks]
+    if not ({'VERB', 'PRTS'} & set(o_pos) and {'VERB', 'PRTS'} & set(c_pos)):
+        return False
+
     o_voices = [o_tok.feats.get('Voice', None) for o_tok in o_toks]
     c_voices = [c_tok.feats.get('Voice', None) for c_tok in c_toks]
-    if (({'VERB', 'PRTS'} & set(o_pos)) and ({'VERB', 'PRTS'} & set(c_pos)) and
-            (('Pass' not in o_voices and 'Pass' in c_voices) or
-             ('Pass' in o_voices and 'Pass' not in c_voices))):
+    if 'Pass' not in o_voices and 'Pass' in c_voices:
         return True
 
-    return False
+    return ('Pass' in o_voices and
+            'Pass' not in c_voices
+            and pymorphy_parser.word_is_known(o_toks[o_voices.index('Pass')].text))
 
 
 def brev_natasha(o_toks, c_toks):
@@ -452,7 +455,9 @@ def related_stems(first, second):
     min_length = min(len(first_stem), len(second_stem))
     return (distance(first_stem[:min_length], second_stem[:min_length]) < 2 or
             distance(first_stem[-min_length:], second_stem[-min_length:]) < 2 or
-            distance(first_stem, second_stem) <= 2)
+            distance(first_stem, second_stem) <= 2 or
+            first_stem in second_stem or
+            second_stem in first_stem)
 
 
 def morph(o_toks, c_toks):
