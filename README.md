@@ -1,11 +1,11 @@
-# Annotator
+# RLC-ERRANT
 
-A tool for automatic annotation of Russian texts. Uses two versions of a text: original and corrected to extract and classify edits. Developed as a modification of [ERRANT](https://github.com/chrisjbryant/errant) for Russian texts.
+A tool for automatic error annotation in Russian sentences. Taking as input an original sentence and its correction, it extracts and classifies edits according to the [RLC type system](https://aclanthology.org/2024.lrec-main.1241.pdf). Developed as a modification of [ERRANT](https://github.com/chrisjbryant/errant) for Russian texts.
 
-Using it can be as simple as 
+Usage: 
 
 ```
-from annotator.annotator import Annotator
+from annotator import Annotator
 a = Annotator()
 edits = a.annotate('К тому, что я считаю, что это единственное отличие на самом деле огромное, хотя его можно сформулировать всего лишь одно простое предложение.',
                    'К тому, что я считаю, что это единственное отличие на самом деле огромно, хотя его можно сформулировать всего лишь в одном простом предложении.')
