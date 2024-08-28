@@ -91,7 +91,8 @@ def process_seq(seq, alignment):
                 c_str = "".join(c_toks)
                 t = sub("['-]", "", c_str)
                 if s == t or (len(o_seq) + len(c_seq) <= 4 and
-                              '-' in o_str + c_str and
+                              (0 < o_str.find('-') < len(o_str) - 1 or
+                               0 < c_str.find('-') < len(c_str) - 1) and
                               Levenshtein.ratio(s, t) >= .75):
                     return merge_by_indices(start, end, seq, alignment)
 
