@@ -252,7 +252,7 @@ def capitalization(o_toks, c_toks):
 
 def graph(o_toks, _):
     for tok in o_toks:
-        if re.search('[а-яА-Я]', tok.text) and tok.feats.get('Foreign') == 'Yes':
+        if re.search('[а-яА-Я]', tok.text) and re.search('[a-zA-Z]', tok.text):
             return True
     return False
 
