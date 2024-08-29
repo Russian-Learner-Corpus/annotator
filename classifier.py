@@ -56,9 +56,9 @@ def get_aspect(verb):
     return aspects[0] if aspects else None
 
 
-def get_possible_num_cases(word):
+def get_possible_num_cases(word, pos_set=None):
     return set((p.tag.number, p.tag.case) for p in pymorphy_parser.parse(word)
-               if p.tag.case)
+               if p.tag.case and p.score > 0.001 and (pos_set is None or p.tag.POS in pos_set))
 
 
 def classify(edit):
@@ -321,28 +321,58 @@ def num(o_toks, c_toks):
     return False
 
 
+def get_pos_gender(word, pos):
+    for p in pymorphy_parser.parse(word):
+        if p.tag.POS == pos:
+            return p.tag.gender
+    return None
+
+
 def gender(o_toks, c_toks):
     if len(o_toks) != len(c_toks):
         return False
 
+    pos = []
+    c_gender = None
+    for t in c_toks:
+        p = pymorphy_parser.parse(t.text)[0]
+        if (p.tag.gender is None) or (c_gender is not None and p.tag.gender != c_gender):
+            return False
+        c_gender = p.tag.gender
+        pos.append(p.tag.POS)
+
+    for t, p in zip(o_toks, pos):
+        o_gender = get_pos_gender(t.text, p)
+        if o_gender in {None, c_gender}:
+            return False
+
     # o_genders = [o_tok.feats.get('Gender', None) for o_tok in o_toks]
-    o_genders = [pymorphy_parser.parse(o_tok.text)[0].tag.gender for o_tok in o_toks]
+    #o_genders = [pymorphy_parser.parse(o_tok.text)[0].tag.gender for o_tok in o_toks]
     # c_genders = [c_tok.feats.get('Gender', None) for c_tok in c_toks]
-    c_genders = [pymorphy_parser.parse(c_tok.text)[0].tag.gender for c_tok in c_toks]
-    if (o_genders == c_genders or
-            len(set(o_genders)) > 1 or
-            len(set(c_genders)) > 1 or
-            None in o_genders or
-            None in c_genders):
-        return False
+    #c_genders = [pymorphy_parser.parse(c_tok.text)[0].tag.gender for c_tok in c_toks]
+
+    # if (o_genders == c_genders or
+    #         len(set(o_genders)) > 1 or
+    #         len(set(c_genders)) > 1 or
+    #         None in o_genders or
+    #         None in c_genders):
+    #     return False
 
     if not all([(stemmer.stem(o_toks[i].lemma) ==
                  stemmer.stem(c_toks[i].lemma))
                 for i in range(len(o_toks))]):
         return False
 
+    gender_pos  = {'PROPN', 'NOUN', 'PRON'}
+    for o, c in zip(o_toks, c_toks):
+        if not(get_possible_num_cases(o.text, gender_pos) & get_possible_num_cases(c.text, gender_pos)):
+            return False
+
+    #if [o_tok.feats.get('Case', None) for o_tok in o_toks] != [c_tok.feats.get('Case', None) for c_tok in c_toks]:
+    #    return False
+
     pos_set = {tok.pos for tok in c_toks}
-    return len(pos_set & {'PROPN', 'NOUN', 'PRON'}) > 0
+    return len(pos_set & gender_pos) > 0
 
 
 # SYNTAX
@@ -624,18 +654,16 @@ def com(o_toks, c_toks):
         return False
 
 
+def count_words(toks):
+    return len([t for t in toks if t.pos != 'PUNCT'])
+
+
 def impers(o_toks, c_toks):
     o_rel = {tok.rel for tok in o_toks}
     c_rel = {tok.rel for tok in c_toks}
-    if ((('nsubj' in o_rel and 'nsubj' not in c_rel) or
-         ('nsubj' in c_rel and 'nsubj' not in o_rel)
-    ) and
-            ((len(o_toks) > 1) and
-             (len(c_toks) > 1)
-            )
-    ):
-        return True
-    return False
+    return ((('nsubj' in o_rel and 'nsubj' not in c_rel) or
+             ('nsubj' in c_rel and 'nsubj' not in o_rel)) and
+            count_words(o_toks) > 1 and count_words(c_toks) > 1)
 
 
 def cs(o_toks, c_toks):
