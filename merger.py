@@ -100,10 +100,13 @@ def process_seq(seq, alignment):
                 o_pos_set = set([tok.pos for tok in o_seq])
                 c_pos_set = set([tok.pos for tok in c_seq])
                 pos_set = o_pos_set | c_pos_set
-                if len(o_seq) != len(c_seq) and (len(pos_set) == 1 or
-                                                 pos_set <= {'AUX', 'PART', 'VERB'} or
-                                                 {'VERB', 'PRON'} == o_pos_set or
-                                                 {'VERB', 'PRON'} == c_pos_set):
+                if ((len(o_seq) != len(c_seq) and (len(pos_set) == 1 or
+                                                   pos_set <= {'AUX', 'PART', 'VERB'} or
+                                                   {'VERB', 'PRON'} == o_pos_set or
+                                                   {'VERB', 'PRON'} == c_pos_set)) or
+                        # I have
+                        ({'VERB', 'PRON'} == o_pos_set and {'ADP', 'PRON'} == c_pos_set) or
+                        ({'VERB', 'PRON'} == c_pos_set and {'ADP', 'PRON'} == o_pos_set)):
                     return merge_by_indices(start, end, seq, alignment)
 
                 # the same number and case
