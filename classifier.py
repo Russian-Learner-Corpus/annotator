@@ -332,6 +332,9 @@ def gender(o_toks, c_toks):
     if len(o_toks) != len(c_toks):
         return False
 
+    if all(pymorphy_parser.word_is_known(t.text) for t in o_toks):
+        return False
+
     pos = []
     c_gender = None
     for t in c_toks:
@@ -345,18 +348,6 @@ def gender(o_toks, c_toks):
         o_gender = get_pos_gender(t.text, p)
         if o_gender in {None, c_gender}:
             return False
-
-    # o_genders = [o_tok.feats.get('Gender', None) for o_tok in o_toks]
-    #o_genders = [pymorphy_parser.parse(o_tok.text)[0].tag.gender for o_tok in o_toks]
-    # c_genders = [c_tok.feats.get('Gender', None) for c_tok in c_toks]
-    #c_genders = [pymorphy_parser.parse(c_tok.text)[0].tag.gender for c_tok in c_toks]
-
-    # if (o_genders == c_genders or
-    #         len(set(o_genders)) > 1 or
-    #         len(set(c_genders)) > 1 or
-    #         None in o_genders or
-    #         None in c_genders):
-    #     return False
 
     if not all([(stemmer.stem(o_toks[i].lemma) ==
                  stemmer.stem(c_toks[i].lemma))
