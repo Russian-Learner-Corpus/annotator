@@ -686,7 +686,7 @@ def lex(o_toks, c_toks):
 
 
 def prep(o_toks, c_toks):
-    return {tok.pos for tok in o_toks + c_toks}.issubset({'ADP'})
+    return o_toks[0].pos == 'ADP' == c_toks[0].pos and o_toks[0].text != c_toks[0].text
 
 
 def ortho(o_toks, c_toks):

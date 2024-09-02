@@ -97,8 +97,10 @@ def process_seq(seq, alignment):
                     return merge_by_indices(start, end, seq, alignment)
 
                 # the same POS, auxiliary and reflexive verbs
-                o_pos_set = set([tok.pos for tok in o_seq])
-                c_pos_set = set([tok.pos for tok in c_seq])
+                o_pos_list = [tok.pos for tok in o_seq]
+                o_pos_set = set(o_pos_list)
+                c_pos_list = [tok.pos for tok in c_seq]
+                c_pos_set = set(c_pos_list)
                 pos_set = o_pos_set | c_pos_set
                 if ((len(o_seq) != len(c_seq) and (len(pos_set) == 1 or
                                                    pos_set <= {'AUX', 'PART', 'VERB'} or
@@ -117,6 +119,13 @@ def process_seq(seq, alignment):
                                    tok.feats.get('Case'))
                                   for tok in c_seq])
                 if len(o_numcases) == 1 == len(c_numcases) and o_numcases != c_numcases:
+                    return merge_by_indices(start, end, seq, alignment)
+
+                # prepositional government
+                if (o_pos_list[0] == 'ADP' == c_pos_list[0] and
+                        o_seq[0].text.lower() != c_seq[0].text.lower() and
+                        len(o_numcases) == 2 == len(c_numcases) and
+                        len(o_numcases & c_numcases) == 1):
                     return merge_by_indices(start, end, seq, alignment)
 
                 # don't merge
