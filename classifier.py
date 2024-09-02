@@ -686,7 +686,7 @@ def lex(o_toks, c_toks):
 
 
 def prep(o_toks, c_toks):
-    return o_toks[0].pos == 'ADP' == c_toks[0].pos and o_toks[0].text != c_toks[0].text
+    return o_toks[0].pos == 'ADP' == c_toks[0].pos and o_toks[0].text.lower() != c_toks[0].text.lower()
 
 
 def ortho(o_toks, c_toks):
