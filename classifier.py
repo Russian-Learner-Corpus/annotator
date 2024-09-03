@@ -17,6 +17,15 @@ pymorphy_parser = pymorphy2.MorphAnalyzer()
 stemmer = SnowballStemmer('russian')
 
 
+latin_to_cyrillic = {
+    'A': 'А', 'B': 'В', 'C': 'С', 'E': 'Е', 'H': 'Н',
+    'K': 'К', 'M': 'М', 'O': 'О',
+    'P': 'Р', 'T': 'Т', 'X': 'Х', 'Y': 'У',
+    'a': 'а', 'c': 'с', 'e': 'е',
+    'o': 'о', 'p': 'р', 'x': 'х', 'y': 'у'
+}
+
+
 def get_normal_form(word):
     return pymorphy_parser.parse(word)[0].normal_form
 
@@ -250,9 +259,14 @@ def capitalization(o_toks, c_toks):
     return True
 
 
+def cyrillize(s):
+    return ''.join(latin_to_cyrillic.get(c, c) for c in s)
+
+
 def graph(o_toks, _):
     for tok in o_toks:
-        if re.search('[\u0400-\u04FF]', tok.text) and re.search('[^\u0400-\u04FF\d\s\.,!?—:;\'\"()\[\]{}-]', tok.text):
+        if re.search('[\u0400-\u04FF]', tok.text) and re.search('[^\u0400-\u04FF\d\s\.,!?—:;\'\"()\[\]{}-]',
+                                                                cyrillize(tok.text)):
             return True
     return False
 
