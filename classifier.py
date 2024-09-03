@@ -24,7 +24,7 @@ latin_to_cyrillic = {
     'a': 'а', 'c': 'с', 'e': 'е',
     'o': 'о', 'p': 'р', 'x': 'х', 'y': 'у'
 }
-
+lat2cyr = re.compile('|'.join(re.escape(key) for key in latin_to_cyrillic.keys()))
 
 def get_normal_form(word):
     return pymorphy_parser.parse(word)[0].normal_form
@@ -259,8 +259,13 @@ def capitalization(o_toks, c_toks):
     return True
 
 
+def lat2cyr_replace(match):
+    return latin_to_cyrillic[match.group(0)]
+
+
 def cyrillize(s):
-    return ''.join(latin_to_cyrillic.get(c, c) for c in s)
+    return lat2cyr.sub(lat2cyr_replace, s)
+    # return ''.join(latin_to_cyrillic.get(c, c) for c in s)
 
 
 def graph(o_toks, _):
