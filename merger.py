@@ -122,10 +122,12 @@ def process_seq(seq, alignment):
                     return merge_by_indices(start, end, seq, alignment)
 
                 # prepositional government
+                o_cases = set([tok.feats.get('Case') for tok in o_seq])
+                c_cases = set([tok.feats.get('Case') for tok in c_seq])
                 if (o_pos_list[0] == 'ADP' == c_pos_list[0] and
                         o_seq[0].text.lower() != c_seq[0].text.lower() and
-                        len(o_numcases) == 2 == len(c_numcases) and
-                        len(o_numcases & c_numcases) == 1):
+                        len(o_cases) == 2 == len(c_cases) and
+                        len(o_cases & c_cases) == 1):
                     return merge_by_indices(start, end, seq, alignment)
 
                 # don't merge
