@@ -496,7 +496,13 @@ def related_stems(first, second):
     first_stem = stemmer.stem(first)
     second_stem = stemmer.stem(second)
     min_length = min(len(first_stem), len(second_stem))
-    return (distance(first_stem[:min_length], second_stem[:min_length]) < 2 or
+
+    common_prefix = 0
+    while common_prefix < min_length and first_stem[common_prefix] == second_stem[common_prefix]:
+        common_prefix += 1
+
+    return (common_prefix > min_length / 2 or
+            distance(first_stem[:min_length], second_stem[:min_length]) < 2 or
             distance(first_stem[-min_length:], second_stem[-min_length:]) < 2 or
             distance(first_stem, second_stem) <= 2 or
             first_stem in second_stem or
@@ -692,16 +698,9 @@ def lex(o_toks, c_toks):
     if not pymorphy_parser.word_is_known(o) or get_normal_form(o) == get_normal_form(c):
         return False
 
-    o_letters = set(o)
-    c_letters = set(c)
     # double letters and letters in a wrong order are ortho
-    if o_letters == c_letters:
-        return False
     # one-letter errors are ortho
-    return (len(o) - len(c) > 1 or
-            len(c) - len(o) > 1 or
-            len(o_letters - c_letters) > 1 or
-            len(c_letters - o_letters) > 1)
+    return set(o) != set(c) and distance(o, c) > 1
 
 
 def prep(o_toks, c_toks):
