@@ -1,7 +1,8 @@
 """ Main collection of functions for classifying edits """
 import token
 
-import pymorphy2
+import Levenshtein
+import pymorphy3
 import re
 
 from Levenshtein import distance, ratio as lev
@@ -13,7 +14,7 @@ ML = False
 if ML:
     from morph_ortho import is_morph
 
-pymorphy_parser = pymorphy2.MorphAnalyzer()
+pymorphy_parser = pymorphy3.MorphAnalyzer()
 stemmer = SnowballStemmer('russian')
 
 
@@ -270,8 +271,8 @@ def cyrillize(s):
 
 def graph(o_toks, _):
     for tok in o_toks:
-        if re.search('[\u0400-\u04FF]', tok.text) and re.search('[^\u0400-\u04FF\d\s\.,!?—:;\'\"()\[\]{}-]',
-                                                                cyrillize(tok.text)):
+        if (re.search(r'[\u0400-\u04FF]', tok.text) and
+            re.search(r'[^\u0400-\u04FF\d\s\.,!?—:;\'\"()\[\]{}-]', cyrillize(tok.text))):
             return True
     return False
 
@@ -513,6 +514,7 @@ def morph(o_toks, c_toks):
     if ML:
         return morph_ml(o_toks, c_toks)
     return (len(o_toks) == len(c_toks) == 1
+            and Levenshtein.distance(o_toks[0].text, c_toks[0].text) > 1
             and o_toks[0].lemma != c_toks[0].lemma
             and related_stems(o_toks[0].lemma, c_toks[0].lemma))
 
