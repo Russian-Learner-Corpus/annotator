@@ -181,6 +181,8 @@ def get_two_sided_type(o_toks, c_toks):
         return "CS"
     if brev(o_toks, c_toks):
         return "Brev"
+    if infinitive(o_toks, c_toks):
+        return "Infinitive"
     if tense(o_toks, c_toks):
         return "Tense"
     if passive(o_toks, c_toks):
@@ -479,6 +481,15 @@ def tense(o_toks, c_toks):
         aux_in_c, c_tense, _ = extract_aux_tense_asp(c_toks)
         return aux_in_o != aux_in_c and o_tense != c_tense
     return False
+
+def infinitive(o_toks, c_toks):
+    return (len(o_toks) == len(c_toks) == 1 and
+            o_toks[0].pos == c_toks[0].pos == 'VERB' and
+            'Tense' not in o_toks[0].feats and
+            'Tense' in c_toks[0].feats and
+            o_toks[0].lemma == c_toks[0].lemma and
+            (not o_toks[0].text.endswith('ться') or
+             not c_toks[0].text.endswith('тся')))
 
 
 def remove_refl_postfix(text):
