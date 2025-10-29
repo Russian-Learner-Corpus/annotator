@@ -485,6 +485,8 @@ def tense(o_toks, c_toks):
 def infinitive(o_toks, c_toks):
     return (len(o_toks) == len(c_toks) == 1 and
             o_toks[0].pos == c_toks[0].pos == 'VERB' and
+            'VerbForm' in o_toks[0].feats and
+            'VerbForm' in c_toks[0].feats and
             'Inf' == o_toks[0].feats['VerbForm'] and
             'Fin' == c_toks[0].feats['VerbForm'] and
             o_toks[0].lemma == c_toks[0].lemma and
